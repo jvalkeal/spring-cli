@@ -23,7 +23,6 @@ import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +30,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cli.SpringCliException;
 import org.springframework.core.io.Resource;
 import org.springframework.util.StreamUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * @author Mark Pollack
  */
 public abstract class IoUtils {
 
-	public final static String TEST_WORKING_DIRECTORY = "TEST_WORKING_DIRECTORY";
+	// public final static String TEST_WORKING_DIRECTORY = "TEST_WORKING_DIRECTORY";
 
 	private static final Logger logger = LoggerFactory.getLogger(IoUtils.class);
 
@@ -52,15 +50,15 @@ public abstract class IoUtils {
 	}
 
 	public static Path getWorkingDirectory() {
-		String testWorkingDir = System.getenv(TEST_WORKING_DIRECTORY);
-		if (StringUtils.hasText(testWorkingDir)) {
-			Path path = Paths.get(testWorkingDir);
-			if (Files.isDirectory(path)) {
-				return path;
-			} else {
-				throw new SpringCliException("Environment variable TEST_WORKING_DIRECTORY = " + path.toAbsolutePath().toString() + " is not a directory");
-			}
-		}
+		// String testWorkingDir = System.getenv(TEST_WORKING_DIRECTORY);
+		// if (StringUtils.hasText(testWorkingDir)) {
+		// 	Path path = Paths.get(testWorkingDir);
+		// 	if (Files.isDirectory(path)) {
+		// 		return path;
+		// 	} else {
+		// 		throw new SpringCliException("Environment variable TEST_WORKING_DIRECTORY = " + path.toAbsolutePath().toString() + " is not a directory");
+		// 	}
+		// }
 		return Path.of("");
 
 //		try {
