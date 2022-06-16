@@ -17,8 +17,6 @@
 
 package org.springframework.cli.runtime.command;
 
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,18 +24,16 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import org.springframework.cli.runtime.engine.model.ModelPopulator;
-import org.springframework.cli.runtime.engine.model.SystemModelPopulator;
-import org.springframework.cli.util.IoUtils;
-import org.springframework.shell.command.CommandCatalog;
+import org.springframework.shell.command.CommandRegistration;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 
 public class SpringShellDynamicCommandRegistrarTests {
 
 	@Test
-	void testRegistrar() {
+	void testResolver() {
 
 		// Create the objects that represent commands to be registered at runtime
 		Map<Command, List<Command>> commands = new LinkedHashMap<>();
@@ -73,31 +69,109 @@ public class SpringShellDynamicCommandRegistrarTests {
 		// package up the commands in a result object
 		CommandScanResults commandScanResults = new CommandScanResults(commands);
 
-		SpringShellDynamicCommandRegistrar springCliDynamicCommandRegistrar = new SpringShellDynamicCommandRegistrar();
-		Path cwd = IoUtils.getWorkingDirectory().toAbsolutePath();
-		CommandCatalog commandCatalog = CommandCatalog.of();
-		SystemModelPopulator systemModelPopulator = new SystemModelPopulator();
-		List<ModelPopulator> modelPopulators = new ArrayList<>();
-		modelPopulators.add(systemModelPopulator);
-		springCliDynamicCommandRegistrar.registerSpringCliCommands(commandCatalog,
-				commandScanResults, modelPopulators);
+		DynamicCommandResolver resolver = new DynamicCommandResolver(null);
+		when(resolver.scanCommands()).thenReturn(commandScanResults);
+		List<CommandRegistration> regs = resolver.resolve();
 
-		assertThat(commandCatalog.getRegistrations()).hasSize(2);
-		assertThat(commandCatalog.getRegistrations().get("k8s-simple new")).satisfies(registration -> {
-			assertThat(registration.getDescription()).isEqualTo("subcommand description");
-			assertThat(registration.getOptions()).hasSize(2);
-			assertThat(registration.getOptions().get(0)).satisfies(option -> {
-				assertThat(option.getLongNames()).contains("with-gusto");
-				assertThat(option.getType().getType()).isEqualTo(Boolean.class);
-				assertThat(option.getDescription()).isEqualTo("what a nice simple option");
-				assertThat(option.getDefaultValue()).isEqualTo("true");
-				assertThat(option.isRequired()).isTrue();
-			});
-			assertThat(registration.getOptions().get(1)).satisfies(option -> {
-				assertThat(option.getLongNames()).contains("with-greeting");
-				assertThat(option.getType().getType()).isEqualTo(String.class);
-			});
+		assertThat(regs).hasSize(2);
+		CommandRegistration reg1 = regs.stream().filter(r -> r.getCommand().equals("k8s-simple new")).findFirst()
+				.orElse(null);
+		assertThat(reg1).isNotNull();
+		assertThat(reg1.getDescription()).isEqualTo("subcommand description");
+		assertThat(reg1.getOptions()).hasSize(2);
+		assertThat(reg1.getOptions().get(0)).satisfies(option -> {
+			assertThat(option.getLongNames()).contains("with-gusto");
+			assertThat(option.getType().getType()).isEqualTo(Boolean.class);
+			assertThat(option.getDescription()).isEqualTo("what a nice simple option");
+			assertThat(option.getDefaultValue()).isEqualTo("true");
+			assertThat(option.isRequired()).isTrue();
+		});
+		assertThat(reg1.getOptions().get(1)).satisfies(option -> {
+			assertThat(option.getLongNames()).contains("with-greeting");
+			assertThat(option.getType().getType()).isEqualTo(String.class);
 		});
 
+
+		// assertThat(commandCatalog.getRegistrations()).hasSize(2);
+		// assertThat(commandCatalog.getRegistrations().get("k8s-simple new")).satisfies(registration -> {
+		// 	assertThat(registration.getDescription()).isEqualTo("subcommand description");
+		// 	assertThat(registration.getOptions()).hasSize(2);
+		// 	assertThat(registration.getOptions().get(0)).satisfies(option -> {
+		// 		assertThat(option.getLongNames()).contains("with-gusto");
+		// 		assertThat(option.getType().getType()).isEqualTo(Boolean.class);
+		// 		assertThat(option.getDescription()).isEqualTo("what a nice simple option");
+		// 		assertThat(option.getDefaultValue()).isEqualTo("true");
+		// 		assertThat(option.isRequired()).isTrue();
+		// 	});
+		// 	assertThat(registration.getOptions().get(1)).satisfies(option -> {
+		// 		assertThat(option.getLongNames()).contains("with-greeting");
+		// 		assertThat(option.getType().getType()).isEqualTo(String.class);
+		// 	});
+		// });
+
 	}
+	// @Test
+	// void testRegistrar() {
+
+	// 	// Create the objects that represent commands to be registered at runtime
+	// 	Map<Command, List<Command>> commands = new LinkedHashMap<>();
+
+	// 	// Create first command/subcommand
+	// 	Command k8sSimple = new Command("k8s-simple", "command description", null);
+	// 	Command k8sSimpleNew = new Command("new", "subcommand description", null);
+	// 	CommandOption option1 = new CommandOption.Builder()
+	// 			.withName("with-gusto")
+	// 			.withDataType("boolean")
+	// 			.withDescription("what a nice simple option")
+	// 			.withDefaultValue("true")
+	// 			.withRequired(true)
+	// 			.build();
+	// 	k8sSimpleNew.getOptions().add(option1);
+
+	// 	CommandOption option2 = new CommandOption.Builder()
+	// 			.withName("with-greeting")
+	// 			.withDataType("string")
+	// 			.build();
+	// 	k8sSimpleNew.getOptions().add(option2);
+
+	// 	// Create second command/subcommand
+	// 	Command k8sSimpleNewServices = new Command("new-services",
+	// 			"Create the Kubernetes resource files for the application's services.", null);
+	// 	CommandOption optionService1 = new CommandOption.Builder().withName("services-with-gusto").build();
+	// 	k8sSimpleNewServices.getOptions().add(optionService1);
+	// 	CommandOption optionService2 = new CommandOption.Builder().withName("services-with-greeting").build();
+	// 	k8sSimpleNewServices.getOptions().add(optionService2);
+
+	// 	commands.put(k8sSimple, Arrays.asList(k8sSimpleNew, k8sSimpleNewServices));
+
+	// 	// package up the commands in a result object
+	// 	CommandScanResults commandScanResults = new CommandScanResults(commands);
+
+	// 	SpringShellDynamicCommandRegistrar springCliDynamicCommandRegistrar = new SpringShellDynamicCommandRegistrar();
+	// 	Path cwd = IoUtils.getWorkingDirectory().toAbsolutePath();
+	// 	CommandCatalog commandCatalog = CommandCatalog.of();
+	// 	SystemModelPopulator systemModelPopulator = new SystemModelPopulator();
+	// 	List<ModelPopulator> modelPopulators = new ArrayList<>();
+	// 	modelPopulators.add(systemModelPopulator);
+	// 	springCliDynamicCommandRegistrar.registerSpringCliCommands(commandCatalog,
+	// 			commandScanResults, modelPopulators);
+
+	// 	assertThat(commandCatalog.getRegistrations()).hasSize(2);
+	// 	assertThat(commandCatalog.getRegistrations().get("k8s-simple new")).satisfies(registration -> {
+	// 		assertThat(registration.getDescription()).isEqualTo("subcommand description");
+	// 		assertThat(registration.getOptions()).hasSize(2);
+	// 		assertThat(registration.getOptions().get(0)).satisfies(option -> {
+	// 			assertThat(option.getLongNames()).contains("with-gusto");
+	// 			assertThat(option.getType().getType()).isEqualTo(Boolean.class);
+	// 			assertThat(option.getDescription()).isEqualTo("what a nice simple option");
+	// 			assertThat(option.getDefaultValue()).isEqualTo("true");
+	// 			assertThat(option.isRequired()).isTrue();
+	// 		});
+	// 		assertThat(registration.getOptions().get(1)).satisfies(option -> {
+	// 			assertThat(option.getLongNames()).contains("with-greeting");
+	// 			assertThat(option.getType().getType()).isEqualTo(String.class);
+	// 		});
+	// 	});
+
+	// }
 }

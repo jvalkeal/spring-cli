@@ -16,13 +16,14 @@
 package org.springframework.cli.config;
 
 import java.time.Duration;
-import java.util.Collection;
+import java.util.List;
 
 import io.netty.resolver.DefaultAddressResolverGroup;
 
 import org.springframework.boot.autoconfigure.web.reactive.function.client.ReactorNettyHttpClientMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cli.initializr.InitializrClient;
+import org.springframework.cli.runtime.command.DynamicCommandResolver;
 import org.springframework.cli.runtime.engine.model.MavenModelPopulator;
 import org.springframework.cli.runtime.engine.model.ModelPopulator;
 import org.springframework.cli.runtime.engine.model.RootPackageModelPopulator;
@@ -31,7 +32,6 @@ import org.springframework.cli.support.SpringCliUserConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorResourceFactory;
-import org.springframework.shell.MethodTargetRegistrar;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -58,9 +58,9 @@ public class SpringCliConfiguration {
 		return new RootPackageModelPopulator();
 	}
 
-	@Bean
-	public MethodTargetRegistrar dynamicMethodTargetRegistrar(Collection<ModelPopulator> modelPopulators) {
-		return new DynamicMethodTargetRegistrar(modelPopulators);
+    @Bean
+	public DynamicCommandResolver dynamicCommandResolver(List<ModelPopulator> modelPopulators) {
+		return new DynamicCommandResolver(modelPopulators);
 	}
 
     @Bean

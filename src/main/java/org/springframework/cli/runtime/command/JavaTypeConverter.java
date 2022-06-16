@@ -29,7 +29,7 @@ import org.springframework.util.StringUtils;
  */
 public abstract class JavaTypeConverter {
 
-	private static final Map<String, Class> stringClassMap = new HashMap<>();
+	private static final Map<String, Class<?>> stringClassMap = new HashMap<>();
 
 	static {
 		stringClassMap.put("int", Integer.class);
@@ -43,7 +43,7 @@ public abstract class JavaTypeConverter {
 		stringClassMap.put("string", String.class);
 	}
 
-	public static Optional<Class> getJavaClass(String typeName) {
+	public static Optional<Class<?>> getJavaClass(String typeName) {
 		if (StringUtils.hasText(typeName) && stringClassMap.containsKey(typeName.trim().toLowerCase())) {
 			return Optional.of(stringClassMap.get(typeName));
 		}
