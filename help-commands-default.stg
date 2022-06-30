@@ -1,0 +1,46 @@
+name() ::= <<
+<("XXXAVAILABLE COMMANDS"); format="style-highlight">
+
+>>
+
+availability(availability) ::= <%
+<if(!availability.available)>
+<("* "); format="style-highlight">
+<endif>
+%>
+
+availabilityDesc(hasUnavailableCommands) ::= <<
+<if(hasUnavailableCommands)>
+<("Commands marked with (*) are currently unavailable.")>
+<("Type `help <command>` to learn more.")>
+<endif>
+>>
+
+command(command) ::= <<
+<availability(command.availability)><(command.name); format="style-highlight"><(":"); format="style-highlight"> <command.description>
+
+>>
+
+commandGroup(commandGroup) ::= <<
+<(commandGroup.group); format="style-highlight">
+       <commandGroup.commands:{ c | <command(c)>}>
+
+>>
+
+groups(groups) ::= <<
+<groups:{ g | <commandGroup(g)>}>
+>>
+
+flat(commands) ::= <<
+<commands:{ c | <command(c)>}>
+>>
+
+main(model) ::= <<
+<name()>
+<if(model.showGroups)>
+<groups(model.groups)>
+<else>
+<flat(model.commands)>
+<endif>
+<availabilityDesc(model.hasUnavailableCommands)>
+>>
