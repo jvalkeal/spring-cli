@@ -57,11 +57,12 @@ required(option) ::= <%
 
 option(option) ::= <<
 `<arguments(option.arguments)>` <type(option.type)> <option.description> <required(option)>
+
 >>
 
 options(options) ::= <<
 == OPTIONS
-<options:{ o | <option(o)>}>
+<options:{ o | <option(o)>}; separator="\n">
 >>
 
 // main

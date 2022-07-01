@@ -14,3 +14,4 @@ project remove [--name String]
 
 == OPTIONS
 `--name` String Project name *Mandatory*
+

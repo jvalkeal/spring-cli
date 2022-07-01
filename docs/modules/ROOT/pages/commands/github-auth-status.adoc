@@ -14,3 +14,4 @@ github auth status --showToken boolean
 
 == OPTIONS
 `--showToken` boolean Display the auth token *Optional, default = false*
+

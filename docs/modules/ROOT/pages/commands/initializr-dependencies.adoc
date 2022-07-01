@@ -13,4 +13,9 @@ initializr dependencies --server-id String --search String --version String
 ====
 
 == OPTIONS
-`--server-id` String Server to use *Optional*`--search` String Search string to limit results *Optional*`--version` String Limit to compatibility version *Optional*
+`--server-id` String Server to use *Optional*
+
+`--search` String Search string to limit results *Optional*
+
+`--version` String Limit to compatibility version *Optional*
+

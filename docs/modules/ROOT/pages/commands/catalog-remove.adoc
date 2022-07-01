@@ -14,3 +14,4 @@ catalog remove [--name String]
 
 == OPTIONS
 `--name` String Catalog name *Mandatory*
+

@@ -13,4 +13,7 @@ command remove [--commandName String] [--subCommandName String]
 ====
 
 == OPTIONS
-`--commandName` String Command name *Mandatory*`--subCommandName` String SubCommand name *Mandatory*
+`--commandName` String Command name *Mandatory*
+
+`--subCommandName` String SubCommand name *Mandatory*
+

@@ -13,4 +13,9 @@ config unset [--commandName String] [--subCommandName String] [--optionName Stri
 ====
 
 == OPTIONS
-`--commandName` String Name of command *Mandatory*`--subCommandName` String Name of subcommand *Mandatory*`--optionName` String Name of option *Mandatory*
+`--commandName` String Name of command *Mandatory*
+
+`--subCommandName` String Name of subcommand *Mandatory*
+
+`--optionName` String Name of option *Mandatory*
+

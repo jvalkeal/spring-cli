@@ -13,4 +13,7 @@ boot add [--from String] --path String
 ====
 
 == OPTIONS
-`--from` String Add to project from an existing project name or URL *Mandatory*`--path` String Path *Optional*
+`--from` String Add to project from an existing project name or URL *Mandatory*
+
+`--path` String Path *Optional*
+

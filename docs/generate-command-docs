@@ -72,6 +72,7 @@ generate() {
         IFS=':' read -ra FIELDS <<< "$path"
         echo ${FIELDS[0]}
         for F in "${FIELDS[@]:1}"; do
+            echo $F
             NAME="${F// /-}"
             java -jar $jarabsfile help $F > modules/ROOT/pages/commands/$NAME.adoc
             echo "** xref:commands/$NAME.adoc[$F]" >> modules/ROOT/nav-commands.adoc

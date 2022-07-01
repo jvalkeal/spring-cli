@@ -13,4 +13,7 @@ initializr set [--server-id String] [--url String]
 ====
 
 == OPTIONS
-`--server-id` String Server to use *Mandatory*`--url` String Server base url *Mandatory*
+`--server-id` String Server to use *Mandatory*
+
+`--url` String Server base url *Mandatory*
+

@@ -14,3 +14,4 @@ initializr remove [--server-id String]
 
 == OPTIONS
 `--server-id` String Server to use *Mandatory*
+
