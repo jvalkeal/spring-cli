@@ -1,7 +1,13 @@
+// TITLE
+title(commandName, commandShortDesc) ::= <<
+= <commandName>
+<commandShortDesc>
+>>
+
 // NAME
 name(commandName, commandShortDesc) ::= <<
-<("NAME"); format="style-highlight">
-       <commandName> - <commandShortDesc>
+== NAME
+<commandName>
 >>
 
 // SYNOPSIS
@@ -18,8 +24,13 @@ synopsisOption(option) ::= <%
 %>
 
 synopsis(commandName, options) ::= <<
-<("SYNOPSIS"); format="style-highlight">
-       <(commandName); format="style-highlight"> <options: { o | <synopsisOption(o)>}; separator=" ">
+== SYNOPSIS
+====
+[source]
+----
+<commandName> <options: { o | <synopsisOption(o)>}; separator=" ">
+----
+====
 >>
 
 // OPTIONS
@@ -32,7 +43,7 @@ type(type) ::= <<
 >>
 
 required(option) ::= <%
-[
+*
 <if(option.required)>
 <("Mandatory")>
 <else>
@@ -41,24 +52,22 @@ required(option) ::= <%
 <if(option.hasDefaultValue)>
 <(", default = ")><(option.defaultValue)>
 <endif>
-]
+*
 %>
 
 option(option) ::= <<
-<arguments(option.arguments)> <type(option.type)>
-<option.description>
-<required(option)>
-
-
+`<arguments(option.arguments)>` <type(option.type)> <option.description> <required(option)>
 >>
 
 options(options) ::= <<
-<("OPTIONS"); format="style-highlight">
-       <options:{ o | <option(o)>}>
+== OPTIONS
+<options:{ o | <option(o)>}>
 >>
 
 // main
 main(model) ::= <<
+<title(model.name, model.description)>
+
 <name(model.name, model.description)>
 
 <synopsis(model.name, model.parameters)>
