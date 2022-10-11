@@ -27,7 +27,7 @@ import org.openrewrite.InMemoryExecutionContext;
 import org.openrewrite.Recipe;
 import org.openrewrite.SourceFile;
 import org.openrewrite.java.ChangePackage;
-import org.openrewrite.java.Java11Parser;
+import org.openrewrite.java.Java17Parser;
 import org.openrewrite.java.JavaParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +40,7 @@ public class RefactorUtils {
 
 	public static void refactorPackage(String newPackage, String oldPackage, Path workingPath) {
 		System.out.println("\nRefactoring to package name " + newPackage);
-		JavaParser javaParser = new Java11Parser.Builder().build();
+		JavaParser javaParser = new Java17Parser.Builder().build();
 		FileTypeCollectingFileVisitor collector = new FileTypeCollectingFileVisitor(".java");
 		try {
 			Files.walkFileTree(workingPath, collector);
