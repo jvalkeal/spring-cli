@@ -80,20 +80,29 @@ public class DefaultSettingsService implements SettingsService {
 
 	@Override
 	public <T> T read(Class<T> type, String space) {
-		Path dir = getConfigDir();
+		// Path dir = getConfigDir();
+		// String spaceName = StringUtils.hasText(space) ? space : "default-space";
+		// String name = spaceName + "-" + nameProvider.apply(type);
+		// Path path = dir.resolve(name);
+		Path path = resolvePath(type, space);
+		return doRead(path, type);
+	}
+
+	private Path resolvePath(Class<?> type, String space) {
 		String spaceName = StringUtils.hasText(space) ? space : "default-space";
 		String name = spaceName + "-" + nameProvider.apply(type);
-		Path path = dir.resolve(name);
-		return doRead(path, type);
+		Path dir = getConfigDir();
+		return dir.resolve(name);
 	}
 
 	@Override
 	public <T> SpaceResult<T> readResult(Class<T> type, String space, int version) {
 		int v = version > 0 ? version : 1;
-		Path dir = getConfigDir();
-		String spaceName = StringUtils.hasText(space) ? space : "default-space";
-		String name = spaceName + "-" + nameProvider.apply(type);
-		Path path = dir.resolve(name);
+		// Path dir = getConfigDir();
+		// String spaceName = StringUtils.hasText(space) ? space : "default-space";
+		// String name = spaceName + "-" + nameProvider.apply(type);
+		// Path path = dir.resolve(name);
+		Path path = resolvePath(type, space);
 		return null;
 	}
 
@@ -104,11 +113,12 @@ public class DefaultSettingsService implements SettingsService {
 
 	@Override
 	public void write(Object value, String space) {
-		Path dir = getConfigDir();
-		Class<?> clazz = value.getClass();
-		String spaceName = StringUtils.hasText(space) ? space : "default-space";
-		String name = spaceName + "-" + nameProvider.apply(clazz);
-		Path path = dir.resolve(name);
+		// Path dir = getConfigDir();
+		// Class<?> clazz = value.getClass();
+		// String spaceName = StringUtils.hasText(space) ? space : "default-space";
+		// String name = spaceName + "-" + nameProvider.apply(clazz);
+		// Path path = dir.resolve(name);
+		Path path = resolvePath(value.getClass(), space);
 		write(path, value);
 	}
 
