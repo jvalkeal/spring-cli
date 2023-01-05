@@ -105,11 +105,7 @@ public class DefaultUserConfigsService implements UserConfigsService {
 		}
 		versions.add(version);
 		Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.computeIfAbsent(space, key -> new HashMap<>());
-		SpaceTypeInfo spaceTypeInfo = new SpaceTypeInfo();
-		spaceTypeInfo.version = version;
-		spaceTypeInfo.versions = versions;
-		spaceTypeInfo.field = field;
-		spaceTypeInfo.migration = migration;
+		SpaceTypeInfo spaceTypeInfo = new SpaceTypeInfo(version, versions, field, migration);
 		spaceBinding.put(type, spaceTypeInfo);
 	}
 
@@ -157,9 +153,10 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	public void write(Object value, String space) {
 		log.debug("Writing");
 		Assert.notNull(value, "value cannot be null");
+		SpaceTypeInfo info = checkRegistered(value.getClass(), space);
 		checkRegistered(value.getClass(), space);
 		Path path = resolvePath(value.getClass(), space);
-		doWrite(path, value);
+		doWrite(path, value, info);
 	}
 
 	public void setPathProvider(Function<String, Path> pathProvider) {
@@ -198,11 +195,11 @@ public class DefaultUserConfigsService implements UserConfigsService {
 			InputStream in = new DataInputStream(Files.newInputStream(path));
 
 			ObjectNode objectNode = objectMapper.readValue(in, ObjectNode.class);
-			JsonNode versionNode = objectNode.get("version");
+			JsonNode versionNode = objectNode.get(info.field);
 			String version = null;
 			if (versionNode != null) {
 				version = versionNode.asText();
-				objectNode.remove("version");
+				objectNode.remove(info.field);
 			}
 			objectNode = migration(objectNode, version, info.versions, info.migration);
 			return objectMapper.treeToValue(objectNode, type);
@@ -211,7 +208,7 @@ public class DefaultUserConfigsService implements UserConfigsService {
 		}
 	}
 
-	private void doWrite(Path path, Object value) {
+	private void doWrite(Path path, Object value, SpaceTypeInfo info) {
 		log.debug("About to write value {} to path {}", value, path);
 		try {
 			Path parentDir = path.getParent();
@@ -221,7 +218,7 @@ public class DefaultUserConfigsService implements UserConfigsService {
 			OutputStream out = new DataOutputStream(Files.newOutputStream(path));
 
 			ObjectNode objectNode = objectMapper.valueToTree(value);
-			objectNode.put("version", 1);
+			objectNode.put(info.field, info.version);
 			objectMapper.writeValue(out, objectNode);
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to write to path " + path, e);
@@ -266,9 +263,17 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	}
 
 	private static class SpaceTypeInfo {
+
 		String version;
 		Set<String> versions;
 		String field;
 		UserConfigsMigration migration;
+
+		public SpaceTypeInfo(String version, Set<String> versions, String field, UserConfigsMigration migration) {
+			this.version = version;
+			this.versions = versions;
+			this.field = field;
+			this.migration = migration;
+		}
 	}
 }

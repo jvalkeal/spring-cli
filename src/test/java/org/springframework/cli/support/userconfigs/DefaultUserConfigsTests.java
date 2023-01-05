@@ -159,7 +159,7 @@ class DefaultUserConfigsTests {
 	}
 
 	@Test
-	void test() {
+	void shouldImportFromAnnotation() {
 		context = new AnnotationConfigApplicationContext(TestConfig.class);
 		UserConfigsService userConfigsService = context.getBean(UserConfigsService.class);
 		Pojo1 write = Pojo1.of("hi");
@@ -175,7 +175,7 @@ class DefaultUserConfigsTests {
 	}
 
 	@Test
-	void test2() {
+	void shouldImportFromScan() {
 		context = new AnnotationConfigApplicationContext(TestConfig2.class);
 		UserConfigsService userConfigsService = context.getBean(UserConfigsService.class);
 
@@ -190,7 +190,7 @@ class DefaultUserConfigsTests {
 		assertThat(write3).isEqualTo(read3);
 	}
 
-	@UserConfigsScan(basePackages = "org.springframework.cli.support.xxx.config2")
+	@UserConfigsScan(basePackages = "org.springframework.cli.support.userconfigs.config2")
 	@Import(UserConfigsConfiguration.class)
 	private static class TestConfig2 {
 	}

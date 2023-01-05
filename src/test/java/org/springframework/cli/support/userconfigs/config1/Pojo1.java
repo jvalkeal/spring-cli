@@ -3,7 +3,6 @@ package org.springframework.cli.support.userconfigs.config1;
 import org.springframework.cli.support.userconfigs.UserConfigs;
 
 @UserConfigs(space = "", version = "1", versions = { "1", "2" })
-// @SettingsComponent
 public class Pojo1 {
 
 	String field1;
@@ -26,10 +25,6 @@ public class Pojo1 {
 	public void setField1(String field1) {
 		this.field1 = field1;
 	}
-
-	// @SettingsMigration
-	// void from() {
-	// }
 
 	@Override
 	public int hashCode() {
