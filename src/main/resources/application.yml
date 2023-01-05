@@ -13,6 +13,9 @@ spring:
       version:
         show-git-short-commit-id: true
   cli:
+    user-configs:
+      settings-dir-name: springcli
+      settings-dir-env: SPRING_CLI_CONFIG_DIR
     github:
       client-id: 10a18d1837ecdac59ba2
       default-scopes: repo,read:org

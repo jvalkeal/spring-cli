@@ -1,21 +1,22 @@
-package org.springframework.cli.support.xxx.config1;
+package org.springframework.cli.support.userconfigs.config2;
 
-import org.springframework.cli.support.xxx.SettingsBinding;
+import org.springframework.cli.support.userconfigs.UserConfigs;
 
-@SettingsBinding(space = "root1")
-public class Pojo1 {
+@UserConfigs(space = "", version = "1", versions = { "1", "2" })
+// @SettingsComponent
+public class Pojo3 {
 
 	String field1;
 
-	public Pojo1() {
+	public Pojo3() {
 	}
 
-	public Pojo1(String field1) {
+	public Pojo3(String field1) {
 		this.field1 = field1;
 	}
 
-	public static Pojo1 of(String field1) {
-		return new Pojo1(field1);
+	public static Pojo3 of(String field1) {
+		return new Pojo3(field1);
 	}
 
 	public String getField1() {
@@ -25,6 +26,10 @@ public class Pojo1 {
 	public void setField1(String field1) {
 		this.field1 = field1;
 	}
+
+	// @SettingsMigration
+	// void from() {
+	// }
 
 	@Override
 	public int hashCode() {
@@ -45,7 +50,7 @@ public class Pojo1 {
 		if (getClass() != obj.getClass()) {
 			return false;
 		}
-		Pojo1 other = (Pojo1) obj;
+		Pojo3 other = (Pojo3) obj;
 		if (field1 == null) {
 			if (other.field1 != null) {
 				return false;
