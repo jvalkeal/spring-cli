@@ -15,7 +15,7 @@
  */
 package org.springframework.cli.support.userconfigs;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  * Bean class holding set of candicate classes for user configs.
@@ -24,13 +24,13 @@ import java.util.Set;
  */
 public class UserConfigsHolder {
 
-	private Set<Class<?>> userConfigClasses;
+	private List<Class<?>> userConfigClasses;
 
-	public UserConfigsHolder(Set<Class<?>> userConfigClasses) {
+	public UserConfigsHolder(List<Class<?>> userConfigClasses) {
 		this.userConfigClasses = userConfigClasses;
 	}
 
-	public Set<Class<?>> getUserConfigClasses() {
+	public List<Class<?>> getUserConfigClasses() {
 		return userConfigClasses;
 	}
 }

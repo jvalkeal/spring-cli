@@ -15,6 +15,7 @@
  */
 package org.springframework.cli.support.userconfigs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -22,6 +23,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.context.TypeExcludeFilter;
@@ -86,8 +88,9 @@ class UserConfigsScanRegistrar implements ImportBeanDefinitionRegistrar {
 			}
 		}
 		if (!types.isEmpty()) {
-			RootBeanDefinition beanDefinition = new RootBeanDefinition(UserConfigsHolder.class,
-					() -> new UserConfigsHolder(types));
+			ConstructorArgumentValues cav = new ConstructorArgumentValues();
+			cav.addIndexedArgumentValue(0, new ArrayList<>(types));
+			RootBeanDefinition beanDefinition = new RootBeanDefinition(UserConfigsHolder.class, cav, null);
 			registry.registerBeanDefinition("userConfigsHolderFromScan", beanDefinition);
 		}
 	}

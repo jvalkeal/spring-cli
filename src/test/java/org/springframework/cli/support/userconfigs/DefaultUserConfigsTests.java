@@ -172,17 +172,6 @@ class DefaultUserConfigsTests {
 	@EnableUserConfigs(Pojo1.class)
 	@Import(UserConfigsConfiguration.class)
 	private static class TestConfig {
-
-		// @Bean
-		// UserConfigsService userConfigsService(ObjectProvider<UserConfigsHolder> userConfigsHolder) {
-		// 	DefaultUserConfigsService service = new DefaultUserConfigsService("test", "TEST_DIR");
-		// 	userConfigsHolder.stream()
-		// 		.flatMap(uch -> uch.getUserConfigClasses().stream())
-		// 		.forEach(type -> {
-		// 			service.register(type);
-		// 		});
-		// 	return service;
-		// }
 	}
 
 	@Test
@@ -204,17 +193,6 @@ class DefaultUserConfigsTests {
 	@UserConfigsScan(basePackages = "org.springframework.cli.support.xxx.config2")
 	@Import(UserConfigsConfiguration.class)
 	private static class TestConfig2 {
-
-		// @Bean
-		// UserConfigsService userConfigsService(ObjectProvider<UserConfigsHolder> userConfigsHolder) {
-		// 	DefaultUserConfigsService service = new DefaultUserConfigsService("test", "TEST_DIR");
-		// 	userConfigsHolder.stream()
-		// 		.flatMap(uch -> uch.getUserConfigClasses().stream())
-		// 		.forEach(type -> {
-		// 			service.register(type);
-		// 		});
-		// 	return service;
-		// }
 	}
 
 	private static class UserConfigsConfiguration {

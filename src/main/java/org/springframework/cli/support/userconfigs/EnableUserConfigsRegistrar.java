@@ -15,10 +15,12 @@
  */
 package org.springframework.cli.support.userconfigs;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -35,14 +37,16 @@ class EnableUserConfigsRegistrar implements ImportBeanDefinitionRegistrar {
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 		Set<Class<?>> types = getTypes(metadata);
-		RootBeanDefinition beanDefinition = new RootBeanDefinition(UserConfigsHolder.class,
-				() -> new UserConfigsHolder(types));
+		ConstructorArgumentValues cav = new ConstructorArgumentValues();
+		cav.addIndexedArgumentValue(0, new ArrayList<>(types));
+		RootBeanDefinition beanDefinition = new RootBeanDefinition(UserConfigsHolder.class, cav, null);
 		registry.registerBeanDefinition("userConfigsHolder", beanDefinition);
 	}
 
 	private Set<Class<?>> getTypes(AnnotationMetadata metadata) {
 		return metadata.getAnnotations().stream(EnableUserConfigs.class)
 				.flatMap((annotation) -> Arrays.stream(annotation.getClassArray(MergedAnnotation.VALUE)))
-				.filter((type) -> void.class != type).collect(Collectors.toSet());
+				.filter((type) -> void.class != type)
+				.collect(Collectors.toSet());
 	}
 }
