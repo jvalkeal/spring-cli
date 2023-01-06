@@ -15,7 +15,6 @@
  */
 package org.springframework.cli.support.userconfigs.migration;
 
-import org.springframework.cli.support.userconfigs.migration.DefaultUserConfigsMigrationService.GenericUserConfigsMigrator;
 import org.springframework.core.convert.TypeDescriptor;
 
 /**

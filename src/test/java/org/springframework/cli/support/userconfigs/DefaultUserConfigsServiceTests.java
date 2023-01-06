@@ -14,12 +14,14 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cli.support.userconfigs.config3.Pojo4;
 import org.springframework.cli.support.userconfigs.config3.Pojo5;
 import org.springframework.cli.support.userconfigs.migration.DefaultUserConfigsMigrationService;
+import org.springframework.cli.support.userconfigs.migration.UserConfigsMigrationService;
 import org.springframework.cli.support.userconfigs.migration.UserConfigsMigrator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,7 +36,7 @@ public class DefaultUserConfigsServiceTests {
 	@BeforeEach
 	void setup(@TempDir Path tempDir) {
 		this.tempDir = tempDir;
-		this.service = new DefaultUserConfigsService("test", "TEST_DIR");
+		this.service = new DefaultUserConfigsService("test", "TEST_DIR", null);
 		service.setPathProvider(path -> tempDir);
 	}
 
@@ -61,6 +63,9 @@ public class DefaultUserConfigsServiceTests {
 
 	@Test
 	void shouldMigrate() throws IOException {
+		context = new AnnotationConfigApplicationContext(TestConfig2.class, Pojo4ToPojo5Migration.class, TestConfig.class);
+		UserConfigsService userConfigsService = context.getBean(UserConfigsService.class);
+
 		String v1Yaml =
 				"""
 				---
@@ -71,20 +76,12 @@ public class DefaultUserConfigsServiceTests {
 		Files.createDirectories(dir);
 		Files.write(dir.resolve("default-space-p1"),	v1Yaml.getBytes());
 
-
-		DefaultUserConfigsMigrationService migrationService = new DefaultUserConfigsMigrationService();
-		migrationService.addConverter(Pojo4.class, Pojo5.class, new Pojo4ToPojo5Migration());
-		service.migrationService = migrationService;
-
-		service.register(Pojo4.class);
-		service.register(Pojo5.class);
-		Pojo5 pojo = service.read(Pojo5.class, null, null);
+		Pojo5 pojo = userConfigsService.read(Pojo5.class, null, null);
 		assertThat(pojo).isNotNull();
-		assertThat(pojo.getField2()).isEqualTo("value1");
-
-
+		assertThat(pojo.getField2()).isEqualTo("write4");
 	}
 
+	@Component
 	private static class Pojo4ToPojo5Migration implements UserConfigsMigrator<Pojo4, Pojo5> {
 
 		@Override
@@ -98,10 +95,10 @@ public class DefaultUserConfigsServiceTests {
 	@Test
 	void settingsDirectoryNameMustBeSet() {
 		assertThrows(IllegalArgumentException.class, () -> {
-			new DefaultUserConfigsService(null, null);
+			new DefaultUserConfigsService(null, null, null);
 		});
 		assertThrows(IllegalArgumentException.class, () -> {
-			new DefaultUserConfigsService("", null);
+			new DefaultUserConfigsService("", null, null);
 		});
 	}
 
@@ -124,6 +121,7 @@ public class DefaultUserConfigsServiceTests {
 
 	// @Test
 	// void shouldStoreSameTypeInMultipleSpaces() {
+
 	// 	service.register(Pojo1.class, "space1", null, null, null, null);
 	// 	service.register(Pojo1.class, "space2", null, null, null, null);
 
@@ -184,8 +182,15 @@ public class DefaultUserConfigsServiceTests {
 	private static class UserConfigsConfiguration {
 
 		@Bean
-		UserConfigsService userConfigsService(ObjectProvider<UserConfigsHolder> userConfigsHolder) {
-			DefaultUserConfigsService service = new DefaultUserConfigsService("test", "TEST_DIR");
+		public UserConfigsMigrationService userConfigsMigrationService(ObjectProvider<UserConfigsMigrator<?, ?>> migrators) {
+			DefaultUserConfigsMigrationService service = new DefaultUserConfigsMigrationService();
+			migrators.forEach(service::addMigrator);
+			return service;
+		}
+
+		@Bean
+		UserConfigsService userConfigsService(ObjectProvider<UserConfigsHolder> userConfigsHolder, UserConfigsMigrationService migrationService) {
+			DefaultUserConfigsService service = new DefaultUserConfigsService("test", "TEST_DIR", migrationService);
 			userConfigsHolder.stream()
 				.flatMap(uch -> uch.getUserConfigClasses().stream())
 				.forEach(type -> {

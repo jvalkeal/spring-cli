@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import org.springframework.cli.support.userconfigs.migration.DefaultUserConfigsMigrationService.GenericUserConfigsMigrator.ConvertiblePair;
+import org.springframework.cli.support.userconfigs.migration.GenericUserConfigsMigrator.MigratablePair;
 import org.springframework.core.DecoratingProxy;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.convert.TypeDescriptor;
@@ -43,44 +43,44 @@ import org.springframework.util.StringUtils;
  *
  * @author Janne Valkealahti
  */
-public class DefaultUserConfigsMigrationService implements UserConfigsMigrationService {
+public class DefaultUserConfigsMigrationService implements UserConfigsMigrationService, UserConfigsMigratorRegistry {
 
-	private final Converters converters = new Converters();
+	private final Migrators migrators = new Migrators();
 	private final Map<ConverterCacheKey, GenericUserConfigsMigrator> converterCache = new ConcurrentReferenceHashMap<>(64);
 
 	/**
 	 * General NO-OP converter used when conversion is not required.
 	 */
-	private static final GenericUserConfigsMigrator NO_OP_CONVERTER = new NoOpConverter("NO_OP");
+	private static final GenericUserConfigsMigrator NO_OP_CONVERTER = new NoOpMigrator("NO_OP");
 
 	/**
 	 * Used as a cache entry when no converter is available.
 	 * This converter is never returned.
 	 */
-	private static final GenericUserConfigsMigrator NO_MATCH = new NoOpConverter("NO_MATCH");
+	private static final GenericUserConfigsMigrator NO_MATCH = new NoOpMigrator("NO_MATCH");
 
-	// @Override
-	public void addConverter(UserConfigsMigrator<?, ?> converter) {
-		ResolvableType[] typeInfo = getRequiredTypeInfo(converter.getClass(), UserConfigsMigrator.class);
-		if (typeInfo == null && converter instanceof DecoratingProxy decoratingProxy) {
+	@Override
+	public void addMigrator(UserConfigsMigrator<?, ?> migrator) {
+		ResolvableType[] typeInfo = getRequiredTypeInfo(migrator.getClass(), UserConfigsMigrator.class);
+		if (typeInfo == null && migrator instanceof DecoratingProxy decoratingProxy) {
 			typeInfo = getRequiredTypeInfo(decoratingProxy.getDecoratedClass(), UserConfigsMigrator.class);
 		}
 		if (typeInfo == null) {
 			throw new IllegalArgumentException("Unable to determine source type <S> and target type <T> for your " +
-					"Converter [" + converter.getClass().getName() + "]; does the class parameterize those types?");
+					"Converter [" + migrator.getClass().getName() + "]; does the class parameterize those types?");
 		}
-		addConverter(new ConverterAdapter(converter, typeInfo[0], typeInfo[1]));
+		addMigrator(new ConverterAdapter(migrator, typeInfo[0], typeInfo[1]));
 	}
 
-	// @Override
-	public <S, T> void addConverter(Class<S> sourceType, Class<T> targetType, UserConfigsMigrator<? super S, ? extends T> converter) {
-		addConverter(new ConverterAdapter(
-				converter, ResolvableType.forClass(sourceType), ResolvableType.forClass(targetType)));
+	@Override
+	public <S, T> void addMigrator(Class<S> sourceType, Class<T> targetType, UserConfigsMigrator<? super S, ? extends T> migrator) {
+		addMigrator(new ConverterAdapter(
+				migrator, ResolvableType.forClass(sourceType), ResolvableType.forClass(targetType)));
 	}
 
-	// @Override
-	public void addConverter(GenericUserConfigsMigrator converter) {
-		this.converters.add(converter);
+	@Override
+	public void addMigrator(GenericUserConfigsMigrator migrator) {
+		this.migrators.add(migrator);
 		// invalidateCache();
 	}
 
@@ -252,7 +252,7 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 			return (converter != NO_MATCH ? converter : null);
 		}
 
-		converter = this.converters.find(sourceType, targetType);
+		converter = this.migrators.find(sourceType, targetType);
 		if (converter == null) {
 			converter = getDefaultConverter(sourceType, targetType);
 		}
@@ -280,16 +280,16 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 	}
 
 	/**
-	 * Manages all converters registered with the service.
+	 * Manages all migrators registered with the service.
 	 */
-	private static class Converters {
+	private static class Migrators {
 
 		private final Set<GenericUserConfigsMigrator> globalConverters = new CopyOnWriteArraySet<>();
 
-		private final Map<ConvertiblePair, ConvertersForPair> converters = new ConcurrentHashMap<>(256);
+		private final Map<MigratablePair, ConvertersForPair> converters = new ConcurrentHashMap<>(256);
 
 		public void add(GenericUserConfigsMigrator converter) {
-			Set<ConvertiblePair> convertibleTypes = converter.getConvertibleTypes();
+			Set<MigratablePair> convertibleTypes = converter.getConvertibleTypes();
 			if (convertibleTypes == null) {
 				// XXX
 				Assert.state(converter instanceof ConditionalUserConfigsMigrator,
@@ -297,18 +297,18 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 				this.globalConverters.add(converter);
 			}
 			else {
-				for (ConvertiblePair convertiblePair : convertibleTypes) {
+				for (MigratablePair convertiblePair : convertibleTypes) {
 					getMatchableConverters(convertiblePair).add(converter);
 				}
 			}
 		}
 
-		private ConvertersForPair getMatchableConverters(ConvertiblePair convertiblePair) {
+		private ConvertersForPair getMatchableConverters(MigratablePair convertiblePair) {
 			return this.converters.computeIfAbsent(convertiblePair, k -> new ConvertersForPair());
 		}
 
 		public void remove(Class<?> sourceType, Class<?> targetType) {
-			this.converters.remove(new ConvertiblePair(sourceType, targetType));
+			this.converters.remove(new MigratablePair(sourceType, targetType));
 		}
 
 		/**
@@ -326,7 +326,7 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 			List<Class<?>> targetCandidates = getClassHierarchy(targetType.getType());
 			for (Class<?> sourceCandidate : sourceCandidates) {
 				for (Class<?> targetCandidate : targetCandidates) {
-					ConvertiblePair convertiblePair = new ConvertiblePair(sourceCandidate, targetCandidate);
+					MigratablePair convertiblePair = new MigratablePair(sourceCandidate, targetCandidate);
 					GenericUserConfigsMigrator converter = getRegisteredConverter(sourceType, targetType, convertiblePair);
 					if (converter != null) {
 						return converter;
@@ -338,7 +338,7 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 
 		@Nullable
 		private GenericUserConfigsMigrator getRegisteredConverter(TypeDescriptor sourceType,
-				TypeDescriptor targetType, ConvertiblePair convertiblePair) {
+				TypeDescriptor targetType, MigratablePair convertiblePair) {
 
 			// Check specifically registered converters
 			ConvertersForPair convertersForPair = this.converters.get(convertiblePair);
@@ -433,7 +433,7 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 
 
 	/**
-	 * Manages converters registered with a specific {@link ConvertiblePair}.
+	 * Manages converters registered with a specific {@link MigratablePair}.
 	 */
 	private static class ConvertersForPair {
 
@@ -511,19 +511,19 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 	}
 
 	/**
-	 * Internal converter that performs no operation.
+	 * Internal migrator that performs no operation.
 	 */
-	private static class NoOpConverter implements GenericUserConfigsMigrator {
+	private static class NoOpMigrator implements GenericUserConfigsMigrator {
 
 		private final String name;
 
-		public NoOpConverter(String name) {
+		public NoOpMigrator(String name) {
 			this.name = name;
 		}
 
 		@Override
 		@Nullable
-		public Set<ConvertiblePair> getConvertibleTypes() {
+		public Set<MigratablePair> getConvertibleTypes() {
 			return null;
 		}
 
@@ -540,124 +540,25 @@ public class DefaultUserConfigsMigrationService implements UserConfigsMigrationS
 	}
 
 	/**
-	 * Generic converter interface for converting between two or more types.
-	 *
-	 * <p>This is the most flexible of the Converter SPI interfaces, but also the most complex.
-	 * It is flexible in that a GenericConverter may support converting between multiple source/target
-	 * type pairs (see {@link #getConvertibleTypes()}). In addition, GenericConverter implementations
-	 * have access to source/target {@link TypeDescriptor field context} during the type conversion
-	 * process. This allows for resolving source and target field metadata such as annotations and
-	 * generics information, which can be used to influence the conversion logic.
-	 *
-	 * <p>This interface should generally not be used when the simpler {@link Converter} or
-	 * {@link ConverterFactory} interface is sufficient.
-	 *
-	 * <p>Implementations may additionally implement {@link ConditionalUserConfigsMigrator}.
-	 *
-	 * @author Keith Donald
-	 * @author Juergen Hoeller
-	 * @since 3.0
-	 * @see TypeDescriptor
-	 * @see Converter
-	 * @see ConverterFactory
-	 * @see ConditionalUserConfigsMigrator
-	 */
-	public interface GenericUserConfigsMigrator {
-
-		/**
-		 * Return the source and target types that this converter can convert between.
-		 * <p>Each entry is a convertible source-to-target type pair.
-		 * <p>For {@link ConditionalUserConfigsMigrator conditional converters} this method may return
-		 * {@code null} to indicate all source-to-target pairs should be considered.
-		 */
-		@Nullable
-		Set<ConvertiblePair> getConvertibleTypes();
-
-		/**
-		 * Convert the source object to the targetType described by the {@code TypeDescriptor}.
-		 * @param source the source object to convert (may be {@code null})
-		 * @param sourceType the type descriptor of the field we are converting from
-		 * @param targetType the type descriptor of the field we are converting to
-		 * @return the converted object
-		 */
-		@Nullable
-		Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType);
-
-
-		/**
-		 * Holder for a source-to-target class pair.
-		 */
-		final class ConvertiblePair {
-
-			private final Class<?> sourceType;
-
-			private final Class<?> targetType;
-
-			/**
-			 * Create a new source-to-target pair.
-			 * @param sourceType the source type
-			 * @param targetType the target type
-			 */
-			public ConvertiblePair(Class<?> sourceType, Class<?> targetType) {
-				Assert.notNull(sourceType, "Source type must not be null");
-				Assert.notNull(targetType, "Target type must not be null");
-				this.sourceType = sourceType;
-				this.targetType = targetType;
-			}
-
-			public Class<?> getSourceType() {
-				return this.sourceType;
-			}
-
-			public Class<?> getTargetType() {
-				return this.targetType;
-			}
-
-			@Override
-			public boolean equals(@Nullable Object other) {
-				if (this == other) {
-					return true;
-				}
-				if (other == null || other.getClass() != ConvertiblePair.class) {
-					return false;
-				}
-				ConvertiblePair otherPair = (ConvertiblePair) other;
-				return (this.sourceType == otherPair.sourceType && this.targetType == otherPair.targetType);
-			}
-
-			@Override
-			public int hashCode() {
-				return (this.sourceType.hashCode() * 31 + this.targetType.hashCode());
-			}
-
-			@Override
-			public String toString() {
-				return (this.sourceType.getName() + " -> " + this.targetType.getName());
-			}
-		}
-
-	}
-
-	/**
-	 * Adapts a {@link Converter} to a {@link GenericUserConfigsMigrator}.
+	 * Adapts a {@link UserConfigsMigrator} to a {@link GenericUserConfigsMigrator}.
 	 */
 	@SuppressWarnings("unchecked")
 	private final class ConverterAdapter implements ConditionalGenericUserConfigsMigrator {
 
 		private final UserConfigsMigrator<Object, Object> converter;
 
-		private final ConvertiblePair typeInfo;
+		private final MigratablePair typeInfo;
 
 		private final ResolvableType targetType;
 
 		public ConverterAdapter(UserConfigsMigrator<?, ?> converter, ResolvableType sourceType, ResolvableType targetType) {
 			this.converter = (UserConfigsMigrator<Object, Object>) converter;
-			this.typeInfo = new ConvertiblePair(sourceType.toClass(), targetType.toClass());
+			this.typeInfo = new MigratablePair(sourceType.toClass(), targetType.toClass());
 			this.targetType = targetType;
 		}
 
 		@Override
-		public Set<ConvertiblePair> getConvertibleTypes() {
+		public Set<MigratablePair> getConvertibleTypes() {
 			return Collections.singleton(this.typeInfo);
 		}
 

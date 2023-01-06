@@ -78,15 +78,16 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	private final String settingsDirEnv;
 	private final String settingsDirName;
 	private final ObjectMapper objectMapper;
-	// private final Map<String, Map<Class<?>, SpaceTypeInfo>> spaceBindings = new HashMap<>();
+	private final UserConfigsMigrationService migrationService;
 
-	private Function<Class<?>, String> nameProvider = clazz -> ClassUtils.getShortName(clazz);
 	private Function<String, Path> pathProvider = (path) -> Paths.get(path);
 
-	public DefaultUserConfigsService(String settingsDirName, @Nullable String settingsDirEnv) {
+	public DefaultUserConfigsService(String settingsDirName, @Nullable String settingsDirEnv,
+			UserConfigsMigrationService migrationService) {
 		Assert.hasText(settingsDirName, "settings directory name must be set");
 		this.settingsDirEnv = settingsDirEnv;
 		this.settingsDirName = settingsDirName;
+		this.migrationService = migrationService;
 		this.objectMapper = defaultObjectMapper();
 	}
 
@@ -173,7 +174,6 @@ public class DefaultUserConfigsService implements UserConfigsService {
 
 	@Override
 	public <T> T read(Class<T> type, String space, Supplier<T> defaultSupplier) {
-		// SpaceTypeInfo info = checkRegistered(type, space);
 		PartitionInfo info = checkRegistered(type, space);
 		Path path = resolvePath(type, space, info.partition);
 		T obj = doRead(path, type, info);
@@ -201,7 +201,6 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	public void write(Object value, String space) {
 		log.debug("Writing");
 		Assert.notNull(value, "value cannot be null");
-		// SpaceTypeInfo info = checkRegistered(value.getClass(), space);
 		PartitionInfo info = checkRegistered(value.getClass(), space);
 		checkRegistered(value.getClass(), space);
 		Path path = resolvePath(value.getClass(), space, info.partition);
@@ -234,7 +233,6 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	// 	return objectNode;
 	// }
 
-	public UserConfigsMigrationService migrationService;
 
 	private <T> T doRead(Path path, Class<T> type, PartitionInfo info) {
 		log.debug("About to read type {} from path {}", type, path);

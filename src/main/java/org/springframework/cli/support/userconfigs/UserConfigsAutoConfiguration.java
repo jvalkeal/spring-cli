@@ -21,6 +21,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cli.support.userconfigs.migration.DefaultUserConfigsMigrationService;
+import org.springframework.cli.support.userconfigs.migration.UserConfigsMigrationService;
+import org.springframework.cli.support.userconfigs.migration.UserConfigsMigrator;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -35,10 +38,18 @@ public class UserConfigsAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
+	public UserConfigsMigrationService userConfigsMigrationService(ObjectProvider<UserConfigsMigrator<?, ?>> migrators) {
+		DefaultUserConfigsMigrationService service = new DefaultUserConfigsMigrationService();
+		migrators.forEach(service::addMigrator);
+		return service;
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
 	public UserConfigsService userConfigsService(ObjectProvider<UserConfigsHolder> userConfigsHolder,
-			UserConfigsProperties properties) {
+			UserConfigsProperties properties, UserConfigsMigrationService migrationService) {
 		DefaultUserConfigsService service = new DefaultUserConfigsService(properties.getSettingsDirName(),
-				properties.getSettingsDirEnv());
+				properties.getSettingsDirEnv(), migrationService);
 		userConfigsHolder.stream()
 			.flatMap(uch -> uch.getUserConfigClasses().stream())
 			.forEach(type -> {
