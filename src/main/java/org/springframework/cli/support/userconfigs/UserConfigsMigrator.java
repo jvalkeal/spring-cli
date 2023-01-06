@@ -15,24 +15,7 @@
  */
 package org.springframework.cli.support.userconfigs;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public interface UserConfigsMigrator<S, T> {
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Documented
-public @interface UserConfigs {
-
-	String partition() default "";
-
-	String space() default "";
-
-	String version() default "";
-
-	String[] versions() default {};
-
-	String field() default "version";
+	T migrate(S source);
 }

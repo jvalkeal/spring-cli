@@ -3,7 +3,6 @@ package org.springframework.cli.support.userconfigs.config2;
 import org.springframework.cli.support.userconfigs.UserConfigs;
 
 @UserConfigs(space = "", version = "1", versions = { "1", "2" })
-// @SettingsComponent
 public class Pojo3 {
 
 	String field1;
