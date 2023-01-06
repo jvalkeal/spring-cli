@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -76,7 +77,7 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	private final String settingsDirEnv;
 	private final String settingsDirName;
 	private final ObjectMapper objectMapper;
-	private final Map<String, Map<Class<?>, SpaceTypeInfo>> spaceBindings = new HashMap<>();
+	// private final Map<String, Map<Class<?>, SpaceTypeInfo>> spaceBindings = new HashMap<>();
 
 	private Function<Class<?>, String> nameProvider = clazz -> ClassUtils.getShortName(clazz);
 	private Function<String, Path> pathProvider = (path) -> Paths.get(path);
@@ -91,11 +92,22 @@ public class DefaultUserConfigsService implements UserConfigsService {
 	public void register(Class<?> type) {
 		UserConfigs sbAnn = AnnotationUtils.findAnnotation(type, UserConfigs.class);
 		Assert.notNull(sbAnn, "Class needs to have SettingsBindings annotation");
-		register(type, sbAnn.space(), new HashSet<>(Arrays.asList(sbAnn.versions())), sbAnn.version(), sbAnn.field(), null);
+		register(type, sbAnn.partition(), sbAnn.space(), new HashSet<>(Arrays.asList(sbAnn.versions())), sbAnn.version(), sbAnn.field());
 	}
 
-	public void register(Class<?> type, @Nullable String space, Set<String> versions, @Nullable String version,
-			@Nullable String field, @Nullable UserConfigsMigration migration) {
+	private final Map<String, Map<String, PartitionInfo>> spaceBindings = new HashMap<>();
+
+	private static class PartitionInfo {
+
+		String version;
+		// Set<String> versions = new HashSet<>();
+		Map<Class<?>, String> versions = new HashMap<>();
+		String field;
+		String partition;
+	}
+
+	private void register(Class<?> type, String partition, @Nullable String space, Set<String> versions, @Nullable String version,
+			@Nullable String field) {
 		log.debug("Registering class {}", type);
 		space = StringUtils.hasText(space) ? space : null;
 		field = StringUtils.hasText(field) ? field : DEFAULT_VERSION_FIELD;
@@ -104,19 +116,44 @@ public class DefaultUserConfigsService implements UserConfigsService {
 			versions = new HashSet<>();
 		}
 		versions.add(version);
-		Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.computeIfAbsent(space, key -> new HashMap<>());
-		SpaceTypeInfo spaceTypeInfo = new SpaceTypeInfo(version, versions, field, migration);
-		spaceBinding.put(type, spaceTypeInfo);
+
+		Map<String, PartitionInfo> spaceBinding = spaceBindings.computeIfAbsent(space, key -> new HashMap<>());
+		PartitionInfo partitionInfo = spaceBinding.computeIfAbsent(partition, key -> new PartitionInfo());
+		partitionInfo.version = version;
+		// partitionInfo.versions.add(version);
+		partitionInfo.versions.put(type, version);
+		partitionInfo.field = field;
+		partitionInfo.partition = partition;
+
+		// Map<String, PartitionInfo2> partitionBinding = spaceBindings.computeIfAbsent(partition, key -> new HashMap<>());
+		// spaceBinding.put(partition, partitionInfo2);
+
+		// Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.computeIfAbsent(space, key -> new HashMap<>());
+		// SpaceTypeInfo spaceTypeInfo = new SpaceTypeInfo(version, versions, field, migration);
+		// spaceBinding.put(type, spaceTypeInfo);
 	}
 
-	private SpaceTypeInfo checkRegistered(Class<?> type, String space) {
-		Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.get(space);
-		Assert.notNull(spaceBinding, () -> String.format("No classes registered with space %s", space));
-		SpaceTypeInfo info = spaceBinding.get(type);
-		Assert.isTrue(type != null,
-				() -> String.format("Class type %s not registered in space %s", type, space));
-		return info;
+	private PartitionInfo checkRegistered(Class<?> type, String space) {
+		Map<String, PartitionInfo> map1 = spaceBindings.get(space);
+		Assert.notNull(map1, () -> String.format("No classes registered with space %s", space));
+		PartitionInfo orElse = map1.entrySet().stream()
+			.filter(e -> e.getValue().versions.keySet().contains(type))
+			.map(e -> e.getValue())
+			.findFirst()
+			.orElse(null)
+			;
+
+		return orElse;
 	}
+
+	// private SpaceTypeInfo checkRegistered(Class<?> type, String space) {
+	// 	Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.get(space);
+	// 	Assert.notNull(spaceBinding, () -> String.format("No classes registered with space %s", space));
+	// 	SpaceTypeInfo info = spaceBinding.get(type);
+	// 	Assert.isTrue(type != null,
+	// 			() -> String.format("Class type %s not registered in space %s", type, space));
+	// 	return info;
+	// }
 
 	@Override
 	public <T> T read(Class<T> type) {
@@ -135,8 +172,9 @@ public class DefaultUserConfigsService implements UserConfigsService {
 
 	@Override
 	public <T> T read(Class<T> type, String space, Supplier<T> defaultSupplier) {
-		SpaceTypeInfo info = checkRegistered(type, space);
-		Path path = resolvePath(type, space);
+		// SpaceTypeInfo info = checkRegistered(type, space);
+		PartitionInfo info = checkRegistered(type, space);
+		Path path = resolvePath(type, space, info.partition);
 		T obj = doRead(path, type, info);
 		if (obj == null && defaultSupplier != null) {
 			obj = defaultSupplier.get();
@@ -149,13 +187,23 @@ public class DefaultUserConfigsService implements UserConfigsService {
 		write(value, null);
 	}
 
+
+	private Path resolvePath(Class<?> type, String space, String partition) {
+		String spaceName = StringUtils.hasText(space) ? space : "default-space";
+		// String name = spaceName + "-" + nameProvider.apply(type);
+		String name = spaceName + "-" + partition;
+		Path dir = getConfigDir();
+		return dir.resolve(name);
+	}
+
 	@Override
 	public void write(Object value, String space) {
 		log.debug("Writing");
 		Assert.notNull(value, "value cannot be null");
-		SpaceTypeInfo info = checkRegistered(value.getClass(), space);
+		// SpaceTypeInfo info = checkRegistered(value.getClass(), space);
+		PartitionInfo info = checkRegistered(value.getClass(), space);
 		checkRegistered(value.getClass(), space);
-		Path path = resolvePath(value.getClass(), space);
+		Path path = resolvePath(value.getClass(), space, info.partition);
 		doWrite(path, value, info);
 	}
 
@@ -163,29 +211,31 @@ public class DefaultUserConfigsService implements UserConfigsService {
 		this.pathProvider = pathProvider;
 	}
 
-	private ObjectNode migration(ObjectNode objectNode, String fromVersion, Set<String> versions, UserConfigsMigration migration) {
-		if (migration == null) {
-			return objectNode;
-		}
-		List<String> migrateVersions = versions.stream()
-			.filter(v -> v.compareTo(fromVersion) > 0)
-			.sorted()
-			.collect(Collectors.toList());
-		String from = fromVersion;
-		String to = null;
-		for (String version : migrateVersions) {
-			to = version;
-			ObjectNode migratedObjectNode = migration.migrate(objectNode, from, to);
-			if (migratedObjectNode == null) {
-				return objectNode;
-			}
-			objectNode = migratedObjectNode;
-			from = version;
-		}
-		return objectNode;
-	}
+	// private ObjectNode migration(ObjectNode objectNode, String fromVersion, Set<String> versions, UserConfigsMigration migration) {
+	// 	if (migration == null) {
+	// 		return objectNode;
+	// 	}
+	// 	List<String> migrateVersions = versions.stream()
+	// 		.filter(v -> v.compareTo(fromVersion) > 0)
+	// 		.sorted()
+	// 		.collect(Collectors.toList());
+	// 	String from = fromVersion;
+	// 	String to = null;
+	// 	for (String version : migrateVersions) {
+	// 		to = version;
+	// 		ObjectNode migratedObjectNode = migration.migrate(objectNode, from, to);
+	// 		if (migratedObjectNode == null) {
+	// 			return objectNode;
+	// 		}
+	// 		objectNode = migratedObjectNode;
+	// 		from = version;
+	// 	}
+	// 	return objectNode;
+	// }
 
-	private <T> T doRead(Path path, Class<T> type, SpaceTypeInfo info) {
+	public UserConfigsMigrationService migrationService;
+
+	private <T> T doRead(Path path, Class<T> type, PartitionInfo info) {
 		log.debug("About to read type {} from path {}", type, path);
 		if(!Files.exists(path)) {
 			log.debug("Path {} does not exist", path);
@@ -201,14 +251,28 @@ public class DefaultUserConfigsService implements UserConfigsService {
 				version = versionNode.asText();
 				objectNode.remove(info.field);
 			}
-			objectNode = migration(objectNode, version, info.versions, info.migration);
+			String versionx = version;
+
+			Class<?> sourceType = info.versions.entrySet().stream().filter(e -> e.getValue().equals(versionx)).map(e -> e.getKey()).findFirst().orElse(null);
+
+			if (migrationService != null) {
+				Class<?> targetType = type;
+				boolean canMigrate = migrationService.canMigrate(sourceType, targetType);
+				if (canMigrate) {
+					Object treeToValue = objectMapper.treeToValue(objectNode, sourceType);
+					return migrationService.migrate(treeToValue, type);
+				}
+
+			}
+
+			// objectNode = migration(objectNode, version, info.versions, info.migration);
 			return objectMapper.treeToValue(objectNode, type);
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to read from path " + path, e);
 		}
 	}
 
-	private void doWrite(Path path, Object value, SpaceTypeInfo info) {
+	private void doWrite(Path path, Object value, PartitionInfo info) {
 		log.debug("About to write value {} to path {}", value, path);
 		try {
 			Path parentDir = path.getParent();
@@ -242,13 +306,6 @@ public class DefaultUserConfigsService implements UserConfigsService {
 		return path;
 	}
 
-	private Path resolvePath(Class<?> type, String space) {
-		String spaceName = StringUtils.hasText(space) ? space : "default-space";
-		String name = spaceName + "-" + nameProvider.apply(type);
-		Path dir = getConfigDir();
-		return dir.resolve(name);
-	}
-
 	private boolean isWindows() {
 		String os = System.getProperty("os.name");
 		return os.startsWith("Windows");
@@ -260,20 +317,5 @@ public class DefaultUserConfigsService implements UserConfigsService {
 		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		mapper.setSerializationInclusion(Include.NON_NULL);
 		return mapper;
-	}
-
-	private static class SpaceTypeInfo {
-
-		String version;
-		Set<String> versions;
-		String field;
-		UserConfigsMigration migration;
-
-		public SpaceTypeInfo(String version, Set<String> versions, String field, UserConfigsMigration migration) {
-			this.version = version;
-			this.versions = versions;
-			this.field = field;
-			this.migration = migration;
-		}
 	}
 }
