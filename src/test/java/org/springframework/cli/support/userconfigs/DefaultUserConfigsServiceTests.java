@@ -13,6 +13,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cli.support.userconfigs.config3.Pojo4;
 import org.springframework.cli.support.userconfigs.config3.Pojo5;
+import org.springframework.cli.support.userconfigs.migration.DefaultUserConfigsMigrationService;
+import org.springframework.cli.support.userconfigs.migration.UserConfigsMigrator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;

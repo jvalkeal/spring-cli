@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cli.support.userconfigs;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
+package org.springframework.cli.support.userconfigs.migration;
 
 /**
- * Interface defining a migration between user config versions.
+ * A migrator converts a source object of type {@code S} to a target of type {@code T}.
  *
- * @author Janne Valkealahti
  */
-public interface UserConfigsMigration {
+public interface UserConfigsMigrator<S, T> {
 
 	/**
-	 * Migrates an {@link ObjectNode} from {@code fromVersion} to {@code toVersion}.
+	 * Convert the source object of type {@code S} to target type {@code T}.
 	 *
-	 * @param objectNode the object node
-	 * @param fromVersion the from version
-	 * @param toVersion the to version
-	 * @return changed object node
+	 * @param source the source object to convert, which must be an instance of {@code S} (never {@code null})
+	 * @return the converted object, which must be an instance of {@code T} (potentially {@code null})
+	 * @throws IllegalArgumentException if the source cannot be converted to the desired target type
 	 */
-	ObjectNode migrate(ObjectNode objectNode, String fromVersion, String toVersion);
+	T migrate(S source);
 }

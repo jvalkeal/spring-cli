@@ -1,4 +1,19 @@
-package org.springframework.cli.support.userconfigs;
+/*
+ * Copyright 2023 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.cli.support.userconfigs.migration;
 
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.lang.Nullable;
@@ -7,12 +22,9 @@ import org.springframework.util.ObjectUtils;
 /**
  * Exception to be thrown when an actual type conversion attempt fails.
  *
- * @author Keith Donald
- * @author Juergen Hoeller
- * @since 3.0
+ * @author Janne Valkealahti
  */
-@SuppressWarnings("serial")
-public class ConversionFailedException extends ConversionException {
+public class UserConfigsMigrationFailedException extends UserConfigsMigrationException {
 
 	@Nullable
 	private final TypeDescriptor sourceType;
@@ -30,7 +42,7 @@ public class ConversionFailedException extends ConversionException {
 	 * @param value the value we tried to convert
 	 * @param cause the cause of the conversion failure
 	 */
-	public ConversionFailedException(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType,
+	public UserConfigsMigrationFailedException(@Nullable TypeDescriptor sourceType, TypeDescriptor targetType,
 			@Nullable Object value, Throwable cause) {
 
 		super("Failed to convert from type [" + sourceType + "] to type [" + targetType +
@@ -63,5 +75,4 @@ public class ConversionFailedException extends ConversionException {
 	public Object getValue() {
 		return this.value;
 	}
-
 }
