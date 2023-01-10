@@ -56,7 +56,7 @@ import org.springframework.util.StringUtils;
  * This implementation keeps settings persisted in a common location
  * which is different depending on a Operating System in use. A set of
  * files are used and file format is {@code yaml}. Filenames depends
- * of a {@code space} in use.
+ * of a {@code space} and {@code partition} in use.
  *
  * {@code Settings Directory Name} is mandatory to set so that there is a less
  * change of a multiple implementations picking same settings directory, thus
