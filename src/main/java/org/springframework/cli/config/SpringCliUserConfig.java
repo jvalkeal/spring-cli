@@ -39,8 +39,8 @@ import org.springframework.util.ObjectUtils;
 		SpringCliUserConfig.CommandDefaults.class,
 		SpringCliUserConfig.CommandDefault.class,
 		SpringCliUserConfig.Option.class,
-		SpringCliUserConfig.Initializrs.class,
-		SpringCliUserConfig.Initializr.class,
+		// SpringCliUserConfig.Initializrs.class,
+		// SpringCliUserConfig.Initializr.class,
 		SpringCliUserConfig.Hosts.class,
 		SpringCliUserConfig.Host.class})
 public class SpringCliUserConfig {
@@ -97,7 +97,7 @@ public class SpringCliUserConfig {
 
 	private final UserConfig<CommandDefaults> commandDefaultsUserConfig;
 
-	private final UserConfig<Initializrs> initializrsUserConfig;
+	// private final UserConfig<Initializrs> initializrsUserConfig;
 
 
 	public SpringCliUserConfig() {
@@ -113,14 +113,14 @@ public class SpringCliUserConfig {
 				SPRING_CLI_CONFIG_DIR, SPRING_CLI_CONFIG_DIR_NAME);
 		this.commandDefaultsUserConfig = new UserConfig<>(COMMAND_DEFAULTS_FILE_NAME, CommandDefaults.class,
 				SPRING_CLI_CONFIG_DIR, SPRING_CLI_CONFIG_DIR_NAME);
-		this.initializrsUserConfig = new UserConfig<>(INITIALIZR_FILE_NAME, Initializrs.class,
-				SPRING_CLI_CONFIG_DIR, SPRING_CLI_CONFIG_DIR_NAME);
+		// this.initializrsUserConfig = new UserConfig<>(INITIALIZR_FILE_NAME, Initializrs.class,
+		// 		SPRING_CLI_CONFIG_DIR, SPRING_CLI_CONFIG_DIR_NAME);
 		if (pathProvider != null) {
 			this.hostsUserConfig.setPathProvider(pathProvider);
 			this.projectCatalogsUserConfig.setPathProvider(pathProvider);
 			this.projectRepositoriesUserConfig.setPathProvider(pathProvider);
 			this.commandDefaultsUserConfig.setPathProvider(pathProvider);
-			this.initializrsUserConfig.setPathProvider(pathProvider);
+			// this.initializrsUserConfig.setPathProvider(pathProvider);
 		}
 	}
 
@@ -268,79 +268,79 @@ public class SpringCliUserConfig {
 		}
 	}
 
-	public Map<String, Initializr> getInitializrs() {
-		Initializrs initializrs = initializrsUserConfig.getConfig();
-		return initializrs != null ? initializrs.getInitializrs() : new HashMap<>();
-	}
+	// public Map<String, Initializr> getInitializrs() {
+	// 	Initializrs initializrs = initializrsUserConfig.getConfig();
+	// 	return initializrs != null ? initializrs.getInitializrs() : new HashMap<>();
+	// }
 
-	public void setInitializrs(Initializrs initializrs) {
-		initializrsUserConfig.setConfig(initializrs);
-	}
+	// public void setInitializrs(Initializrs initializrs) {
+	// 	initializrsUserConfig.setConfig(initializrs);
+	// }
 
-	public void updateInitializr(String key, Initializr initializr) {
-		Map<String, Initializr> initializrsMap = null;
-		Initializrs initializrs = initializrsUserConfig.getConfig();
-		if (initializrs != null) {
-			initializrsMap = initializrs.getInitializrs();
-		}
-		else {
-			initializrs = new Initializrs();
-		}
-		if (initializrsMap == null) {
-			initializrsMap = new HashMap<>();
-		}
-		initializrsMap.put(key, initializr);
-		initializrs.setInitializrs(initializrsMap);
-		setInitializrs(initializrs);
-	}
+	// public void updateInitializr(String key, Initializr initializr) {
+	// 	Map<String, Initializr> initializrsMap = null;
+	// 	Initializrs initializrs = initializrsUserConfig.getConfig();
+	// 	if (initializrs != null) {
+	// 		initializrsMap = initializrs.getInitializrs();
+	// 	}
+	// 	else {
+	// 		initializrs = new Initializrs();
+	// 	}
+	// 	if (initializrsMap == null) {
+	// 		initializrsMap = new HashMap<>();
+	// 	}
+	// 	initializrsMap.put(key, initializr);
+	// 	initializrs.setInitializrs(initializrsMap);
+	// 	setInitializrs(initializrs);
+	// }
 
-	public static class Initializrs {
+	// public static class Initializrs {
 
-		private Map<String, Initializr> initializrs = new HashMap<>();
+	// 	private Map<String, Initializr> initializrs = new HashMap<>();
 
-		public Initializrs() {
-		}
+	// 	public Initializrs() {
+	// 	}
 
-		public Initializrs(Map<String, Initializr> initializrs) {
-			this.initializrs.putAll(initializrs);
-		}
+	// 	public Initializrs(Map<String, Initializr> initializrs) {
+	// 		this.initializrs.putAll(initializrs);
+	// 	}
 
-		public Map<String, Initializr> getInitializrs() {
-			return initializrs;
-		}
+	// 	public Map<String, Initializr> getInitializrs() {
+	// 		return initializrs;
+	// 	}
 
-		public static Initializrs of(Map<String, Initializr> initializrs) {
-			return new Initializrs(initializrs);
-		}
+	// 	public static Initializrs of(Map<String, Initializr> initializrs) {
+	// 		return new Initializrs(initializrs);
+	// 	}
 
-		public void setInitializrs(Map<String, Initializr> initializrs) {
-			this.initializrs = initializrs;
-		}
-	}
+	// 	public void setInitializrs(Map<String, Initializr> initializrs) {
+	// 		this.initializrs = initializrs;
+	// 	}
+	// }
 
-	public static class Initializr {
+	// public static class Initializr {
 
-		private String url;
+	// 	private String url;
 
-		Initializr() {
-		}
+	// 	Initializr() {
+	// 	}
 
-		public Initializr(String url) {
-			this.url = url;
-		}
+	// 	public Initializr(String url) {
+	// 		this.url = url;
+	// 	}
 
-		public static Initializr of(String url) {
-			return new Initializr(url);
-		}
+	// 	public static Initializr of(String url) {
+	// 		return new Initializr(url);
+	// 	}
 
-		public String getUrl() {
-			return url;
-		}
+	// 	public String getUrl() {
+	// 		return url;
+	// 	}
 
-		public void setUrl(String url) {
-			this.url = url;
-		}
-	}
+	// 	public void setUrl(String url) {
+	// 		this.url = url;
+	// 	}
+	// }
 
 	public abstract static class BaseProjectCommon {
 
