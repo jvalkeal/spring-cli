@@ -25,13 +25,10 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -43,11 +40,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.cli.support.userconfigs.migration.SettingsMigrationService;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -62,7 +57,7 @@ import org.springframework.util.StringUtils;
  * change of a multiple implementations picking same settings directory, thus
  * we don't have a default directory.
  *
- * One {@code space} can only use excatly one {@code Java POJO type}, thus
+ * One {@code space} can only use exactly one {@code Java POJO type}, thus
  * a {@code space} is always represented with one instance of a {@code POJO}.
  *
  * @author Janne Valkealahti

@@ -13,20 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cli.support.userconfigs.migration;
+package org.springframework.cli.support.userconfigs;
 
-import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.NestedRuntimeException;
 
 /**
- * A {@link GenericSettingsMigrator} that may conditionally execute based on attributes
- * of the {@code source} and {@code target} {@link TypeDescriptor}.
- *
- * <p>See {@link ConditionalSettingsMigrator} for details.
+ * Base class for exceptions thrown by the migration system.
  *
  * @author Janne Valkealahti
- * @see GenericSettingsMigrator
- * @see ConditionalSettingsMigrator
  */
-public interface ConditionalGenericSettingsMigrator extends GenericSettingsMigrator, ConditionalSettingsMigrator {
+public class SettingsMigrationException extends NestedRuntimeException {
 
+	/**
+	 * Construct a new migration exception.
+	 *
+	 * @param message the exception message
+	 */
+	public SettingsMigrationException(String message) {
+		super(message);
+	}
+
+	/**
+	 * Construct a new migration exception.
+	 *
+	 * @param message the exception message
+	 * @param cause the cause
+	 */
+	public SettingsMigrationException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

@@ -21,10 +21,9 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.cli.support.userconfigs.migration.DefaultSettingsMigrationService;
-import org.springframework.cli.support.userconfigs.migration.SettingsMigrationService;
-import org.springframework.cli.support.userconfigs.migration.SettingsMigrator;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.DefaultConversionService;
 
 /**
  * {@link EnableAutoConfiguration Auto-configuration} for {@code User Configs}.
@@ -38,9 +37,10 @@ public class SettingsAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public SettingsMigrationService userConfigsMigrationService(ObjectProvider<SettingsMigrator<?, ?>> migrators) {
-		DefaultSettingsMigrationService service = new DefaultSettingsMigrationService();
-		migrators.forEach(service::addMigrator);
+	public SettingsMigrationService userConfigsMigrationService(ObjectProvider<Converter<?, ?>> converters) {
+		DefaultConversionService conversionService = new DefaultConversionService();
+		converters.forEach(conversionService::addConverter);
+		DefaultSettingsMigrationService service = new DefaultSettingsMigrationService(conversionService);
 		return service;
 	}
 

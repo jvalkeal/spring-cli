@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,21 +12,18 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cli.support.userconfigs.config3.Pojo4;
 import org.springframework.cli.support.userconfigs.config3.Pojo5;
-import org.springframework.cli.support.userconfigs.migration.DefaultSettingsMigrationService;
-import org.springframework.cli.support.userconfigs.migration.SettingsMigrationService;
-import org.springframework.cli.support.userconfigs.migration.SettingsMigrator;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertThrows;
 
-public class DefaultUserConfigsServiceTests {
+public class DefaultSettingsServiceTests {
 
 	private Path tempDir;
 	private DefaultSettingsService service;
@@ -63,7 +59,8 @@ public class DefaultUserConfigsServiceTests {
 
 	@Test
 	void shouldMigrate() throws IOException {
-		context = new AnnotationConfigApplicationContext(TestConfig2.class, Pojo4ToPojo5Migration.class, TestConfig.class);
+		// context = new AnnotationConfigApplicationContext(TestConfig2.class, Pojo4ToPojo5Migration.class, TestConfig.class);
+		context = new AnnotationConfigApplicationContext(TestConfig2.class, Pojo4ToPojo5Converver.class, TestConfig.class);
 		SettingsService userConfigsService = context.getBean(SettingsService.class);
 
 		String v1Yaml =
@@ -81,15 +78,27 @@ public class DefaultUserConfigsServiceTests {
 		assertThat(pojo.getField2()).isEqualTo("write4");
 	}
 
+	// @Component
+	// private static class Pojo4ToPojo5Migration implements SettingsMigrator<Pojo4, Pojo5> {
+
+	// 	@Override
+	// 	public Pojo5 migrate(Pojo4 source) {
+	// 		Pojo5 pojo5 = new Pojo5();
+	// 		pojo5.setField2(source.getField1());
+	// 		return pojo5;
+	// 	}
+	// }
+
 	@Component
-	private static class Pojo4ToPojo5Migration implements SettingsMigrator<Pojo4, Pojo5> {
+	private static class Pojo4ToPojo5Converver implements Converter<Pojo4, Pojo5> {
 
 		@Override
-		public Pojo5 migrate(Pojo4 source) {
+		public Pojo5 convert(Pojo4 source) {
 			Pojo5 pojo5 = new Pojo5();
 			pojo5.setField2(source.getField1());
 			return pojo5;
 		}
+
 	}
 
 	@Test
@@ -119,8 +128,8 @@ public class DefaultUserConfigsServiceTests {
 		assertThat(read).isNull();
 	}
 
-	// @Test
-	// void shouldStoreSameTypeInMultipleSpaces() {
+	@Test
+	void shouldStoreSameTypeInMultipleSpaces() {
 
 	// 	service.register(Pojo1.class, "space1", null, null, null, null);
 	// 	service.register(Pojo1.class, "space2", null, null, null, null);
@@ -137,54 +146,55 @@ public class DefaultUserConfigsServiceTests {
 	// 	assertThat(writeSpace2).isEqualTo(readSpace2);
 	// 	assertThat(readSpace1.getField1()).isEqualTo("hi1");
 	// 	assertThat(readSpace2.getField1()).isEqualTo("hi2");
-	// }
+	}
 
 	@Test
 	void shouldImportFromAnnotation() {
 		context = new AnnotationConfigApplicationContext(TestConfig.class);
-		SettingsService userConfigsService = context.getBean(SettingsService.class);
+		SettingsService settingsService = context.getBean(SettingsService.class);
 		Pojo4 write4 = new Pojo4();
 		write4.setField1("write4");
-		userConfigsService.write(write4);
-		Pojo4 read4 = userConfigsService.read(Pojo4.class);
+		settingsService.write(write4);
+		Pojo4 read4 = settingsService.read(Pojo4.class);
 		assertThat(write4.getField1()).isEqualTo(read4.getField1());
 	}
 
 	@EnableSettings(Pojo4.class)
-	@Import(UserConfigsConfiguration.class)
+	@Import(SettingsConfiguration.class)
 	private static class TestConfig {
 	}
 
 	@Test
 	void shouldImportFromScan() {
 		context = new AnnotationConfigApplicationContext(TestConfig2.class);
-		SettingsService userConfigsService = context.getBean(SettingsService.class);
+		SettingsService settingsService = context.getBean(SettingsService.class);
 
 		Pojo4 write4 = new Pojo4();
 		write4.setField1("write4");
-		userConfigsService.write(write4);
-		Pojo4 read4 = userConfigsService.read(Pojo4.class);
+		settingsService.write(write4);
+		Pojo4 read4 = settingsService.read(Pojo4.class);
 		assertThat(write4.getField1()).isEqualTo(read4.getField1());
 
 		Pojo5 write5 = new Pojo5();
 		write5.setField2("write5");
-		userConfigsService.write(write5);
-		Pojo5 read5 = userConfigsService.read(Pojo5.class);
+		settingsService.write(write5);
+		Pojo5 read5 = settingsService.read(Pojo5.class);
 		assertThat(write5.getField2()).isEqualTo(read5.getField2());
 
 	}
 
 	@SettingsScan(basePackages = "org.springframework.cli.support.userconfigs.config3")
-	@Import(UserConfigsConfiguration.class)
+	@Import(SettingsConfiguration.class)
 	private static class TestConfig2 {
 	}
 
-	private static class UserConfigsConfiguration {
+	private static class SettingsConfiguration {
 
 		@Bean
-		public SettingsMigrationService userConfigsMigrationService(ObjectProvider<SettingsMigrator<?, ?>> migrators) {
-			DefaultSettingsMigrationService service = new DefaultSettingsMigrationService();
-			migrators.forEach(service::addMigrator);
+		public SettingsMigrationService userConfigsMigrationService(ObjectProvider<Converter<?, ?>> converters) {
+			DefaultConversionService conversionService = new DefaultConversionService();
+			converters.forEach(conversionService::addConverter);
+			DefaultSettingsMigrationService service = new DefaultSettingsMigrationService(conversionService);
 			return service;
 		}
 
