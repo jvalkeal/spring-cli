@@ -19,6 +19,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,14 +30,17 @@ import org.rauschig.jarchivelib.ArchiverFactory;
 
 import org.springframework.cli.config.SpringCliProperties;
 import org.springframework.cli.config.SpringCliUserConfig;
-import org.springframework.cli.config.SpringCliUserConfig.Initializr;
-import org.springframework.cli.config.SpringCliUserConfig.Initializrs;
+// import org.springframework.cli.config.SpringCliUserConfig.Initializr;
+// import org.springframework.cli.config.SpringCliUserConfig.Initializrs;
 import org.springframework.cli.initializr.InitializrClient;
 import org.springframework.cli.initializr.InitializrClientCache;
 import org.springframework.cli.initializr.InitializrUtils;
 import org.springframework.cli.initializr.model.Metadata;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
+import org.springframework.cli.support.userconfigs.SettingsService;
+import org.springframework.cli.config.userconfigs.Initializrs;
+import org.springframework.cli.config.userconfigs.Initializrs.Initializr;
 import org.springframework.shell.component.context.ComponentContext;
 import org.springframework.shell.component.flow.ComponentFlow;
 import org.springframework.shell.component.flow.ComponentFlow.ComponentFlowResult;
@@ -103,14 +107,16 @@ public class InitializrCommands extends AbstractShellComponent {
 
 	private final InitializrClientCache clientCache;
 	private final ComponentFlow.Builder componentFlowBuilder;
-	private final SpringCliUserConfig springCliUserConfig;
+	// private final SpringCliUserConfig springCliUserConfig;
+	private final SettingsService settingsService;
 	private final SpringCliProperties springCliProperties;
 
 	InitializrCommands(InitializrClientCache clientCache, ComponentFlow.Builder componentFlowBuilder,
-			SpringCliUserConfig springCliUserConfig, SpringCliProperties springCliProperties) {
+			/*SpringCliUserConfig springCliUserConfig,*/ SettingsService userConfigs, SpringCliProperties springCliProperties) {
 		this.clientCache = clientCache;
 		this.componentFlowBuilder = componentFlowBuilder;
-		this.springCliUserConfig = springCliUserConfig;
+		// this.springCliUserConfig = springCliUserConfig;
+		this.settingsService = userConfigs;
 		this.springCliProperties = springCliProperties;
 	}
 
@@ -326,7 +332,10 @@ public class InitializrCommands extends AbstractShellComponent {
 	@Command(command = "list", description = "Show the Initializr server environments")
 	public Table list() {
 		Stream<String[]> header = Stream.<String[]>of(new String[] { "ServerId", "Url" });
-		Stream<String[]> rows = this.springCliUserConfig.getInitializrs().entrySet().stream()
+		// Stream<String[]> rows = this.springCliUserConfig.getInitializrs().entrySet().stream()
+		// 		.map(e -> new String[] { e.getKey(), e.getValue().getUrl() });
+		Initializrs initializrs = readInitializrsConfig();
+		Stream<String[]> rows = initializrs.getInitializrs().entrySet().stream()
 				.map(e -> new String[] { e.getKey(), e.getValue().getUrl() });
 		String[][] data = Stream.concat(header, rows).toArray(String[][]::new);
 
@@ -340,18 +349,24 @@ public class InitializrCommands extends AbstractShellComponent {
 		@Option(longNames = "server-id", description = "Server to use") String serverId,
 		@Option(description = "Server base url") String url)
 	{
-		Map<String, Initializr> initializrs = this.springCliUserConfig.getInitializrs();
-		initializrs.put(serverId, Initializr.of(url));
-		this.springCliUserConfig.setInitializrs(Initializrs.of(initializrs));
+		// Map<String, Initializr> initializrs = this.springCliUserConfig.getInitializrs();
+		// initializrs.put(serverId, Initializr.of(url));
+		// this.springCliUserConfig.setInitializrs(Initializrs.of(initializrs));
+		Initializrs initializrs = readInitializrsConfig();
+		initializrs.getInitializrs().put(serverId, Initializr.of(url));
+		this.settingsService.write(initializrs);
 	}
 
 	@Command(command = "remove", description = "Remove the Initializr server environment")
 	public void remove(
 		@Option(longNames = "server-id", description = "Server to use") String serverId)
 	{
-		Map<String, Initializr> initializrs = this.springCliUserConfig.getInitializrs();
-		initializrs.remove(serverId);
-		this.springCliUserConfig.setInitializrs(Initializrs.of(initializrs));
+		// Map<String, Initializr> initializrs = this.springCliUserConfig.getInitializrs();
+		// initializrs.remove(serverId);
+		// this.springCliUserConfig.setInitializrs(Initializrs.of(initializrs));
+		Initializrs initializrs = readInitializrsConfig();
+		initializrs.getInitializrs().remove(serverId);
+		this.settingsService.write(initializrs);
 	}
 
 	@Command(command = "dependencies", description = "List supported dependencies")
@@ -379,12 +394,18 @@ public class InitializrCommands extends AbstractShellComponent {
 	private InitializrClient buildClient(String serverId) {
 		String cacheKey = this.springCliProperties.getInitializr().getBaseUrl();
 		if (StringUtils.hasText(serverId)) {
-			Initializr initializr = this.springCliUserConfig.getInitializrs().get(serverId);
+			// Initializr initializr = this.springCliUserConfig.getInitializrs().get(serverId);
+			Initializrs initializrs = readInitializrsConfig();
+			Initializr initializr = initializrs.getInitializrs().get(serverId);
 			if (initializr != null) {
 				cacheKey = initializr.getUrl();
 			}
 		}
 		return clientCache.get(cacheKey);
+	}
+
+	private Initializrs readInitializrsConfig() {
+		return this.settingsService.read(Initializrs.class, () -> Initializrs.of(new HashMap<>()));
 	}
 
 	private static boolean matches(String[] array, String search) {
