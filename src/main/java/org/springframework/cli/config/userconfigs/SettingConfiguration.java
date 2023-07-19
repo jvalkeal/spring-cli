@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cli.config;
+package org.springframework.cli.config.userconfigs;
 
 import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
-import org.springframework.cli.config.userconfigs.Initializrs;
 import org.springframework.cli.support.userconfigs.SettingsScan;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,7 +27,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Janne Valkealahti
  */
 @Configuration(proxyBeanMethods = false)
-@SettingsScan(basePackages = "org.springframework.cli.config.userconfigs")
+@SettingsScan
 @RegisterReflectionForBinding({ Initializrs.class, Initializrs.Initializr.class })
-public class SpringCliUserConfigsConfig {
+public class SettingConfiguration {
 }

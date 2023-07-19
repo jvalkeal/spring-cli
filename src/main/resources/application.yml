@@ -25,8 +25,8 @@ logging:
   pattern:
     console:
 # log debug from a cli
-#  file:
-#    name: shell.log
+  file:
+    name: shell.log
   level:
     root: DEBUG
     org:
