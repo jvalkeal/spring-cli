@@ -93,8 +93,6 @@ public class DefaultSettingsService implements SettingsService {
 		register(type, sbAnn.partition(), sbAnn.space(), sbAnn.version(), sbAnn.field());
 	}
 
-	// private final Map<String, Map<String, PartitionInfo>> spaceBindings = new HashMap<>();
-
 	// space -> partition -> clazz -> (version, field)
 	private final Map<String, Map<String, Map<Class<?>, Partition>>> spaceMappings = new HashMap<>();
 
@@ -102,13 +100,6 @@ public class DefaultSettingsService implements SettingsService {
 	}
 
 	private record PartitionInfo(String name, Partition partition){}
-
-	// private static class PartitionInfo {
-	// 	// int version;
-	// 	Map<Class<?>, Integer> versions = new HashMap<>();
-	// 	String field;
-	// 	// String partition;
-	// }
 
 	private void register(Class<?> type, String partition, @Nullable String space, @Nullable int version,
 			@Nullable String field) {
@@ -154,7 +145,7 @@ public class DefaultSettingsService implements SettingsService {
 	public <T> T read(Class<T> type, String space, Supplier<T> defaultSupplier) {
 		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
 		PartitionInfo info = checkRegistered(type, spaceName);
-		Path path = resolvePath(type, space, info.name);
+		Path path = resolvePath(type, space, info.name, info.partition().version());
 		T obj = doRead(path, type, info);
 		if (obj == null && defaultSupplier != null) {
 			obj = defaultSupplier.get();
@@ -168,9 +159,9 @@ public class DefaultSettingsService implements SettingsService {
 	}
 
 
-	private Path resolvePath(Class<?> type, String space, String partition) {
+	private Path resolvePath(Class<?> type, String space, String partition, int version) {
 		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
-		String name = spaceName + "-" + partition + ".yml";
+		String name = spaceName + "-" + partition + "-v" + version + ".yml";
 		Path dir = getConfigDir();
 		return dir.resolve(name);
 	}
@@ -181,7 +172,7 @@ public class DefaultSettingsService implements SettingsService {
 		Assert.notNull(value, "value cannot be null");
 		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
 		PartitionInfo info = checkRegistered(value.getClass(), spaceName);
-		Path path = resolvePath(value.getClass(), space, info.name);
+		Path path = resolvePath(value.getClass(), space, info.name, info.partition().version());
 		doWrite(path, value, info);
 	}
 
@@ -192,7 +183,10 @@ public class DefaultSettingsService implements SettingsService {
 
 	private <T> T doRead(Path path, Class<T> type, PartitionInfo info) {
 		log.debug("About to read type {} from path {}", type, path);
-		if(!Files.exists(path)) {
+
+		// for a space and partition get existing versions.
+
+		if (!Files.exists(path)) {
 			log.debug("Path {} does not exist", path);
 			return null;
 		}

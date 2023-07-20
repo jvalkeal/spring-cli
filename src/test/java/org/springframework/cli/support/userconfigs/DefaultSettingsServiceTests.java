@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cli.support.userconfigs.config3.Pojo4;
 import org.springframework.cli.support.userconfigs.config3.Pojo5;
+import org.springframework.cli.support.userconfigs.pojos1.Pojo10;
+import org.springframework.cli.support.userconfigs.pojos1.Pojo11;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -29,18 +32,22 @@ import static org.junit.Assert.assertThrows;
 public class DefaultSettingsServiceTests {
 
 	private Path tempDir;
-	private DefaultSettingsService service;
+	private DefaultSettingsService settingsService;
+	private DefaultConversionService conversionService;
+	private DefaultSettingsMigrationService settingsMigrationService;
 
 	@BeforeEach
 	void setup(@TempDir Path tempDir) {
 		this.tempDir = tempDir;
-		this.service = new DefaultSettingsService("test", "TEST_DIR", null);
-		service.setPathProvider(path -> tempDir);
+		conversionService = new DefaultConversionService();
+		settingsMigrationService = new DefaultSettingsMigrationService(conversionService);
+		settingsService = new DefaultSettingsService("test", "TEST_DIR", settingsMigrationService);
+		settingsService.setPathProvider(path -> tempDir);
 	}
 
 	@SuppressWarnings("unchecked")
 	private Map<String, Map<String, Map<Class<?>, ?>>> getSpaceMappings() {
-		return (Map<String, Map<String, Map<Class<?>, ?>>>) ReflectionTestUtils.getField(service, "spaceMappings");
+		return (Map<String, Map<String, Map<Class<?>, ?>>>) ReflectionTestUtils.getField(settingsService, "spaceMappings");
 	}
 
 	private Map<Class<?>, ?> getClassMappingInfo(String space, String partition) {
@@ -81,8 +88,8 @@ public class DefaultSettingsServiceTests {
 
 		@Test
 		void registerClasses() {
-			service.register(Pojo4.class);
-			service.register(Pojo5.class);
+			settingsService.register(Pojo4.class);
+			settingsService.register(Pojo5.class);
 			assertThat(getSpaceMappings()).hasSize(1);
 			assertThat(getClassVersion(SettingsService.DEFAULT_SPACE, "p1", Pojo4.class)).isEqualTo(1);
 			assertThat(getClassField(SettingsService.DEFAULT_SPACE, "p1", Pojo4.class)).isEqualTo("version");
@@ -98,28 +105,57 @@ public class DefaultSettingsServiceTests {
 		@Test
 		void typeNeedsToBeRegistered() {
 			assertThrows(IllegalArgumentException.class, () -> {
-				service.read(Object.class);
+				settingsService.read(Object.class);
 			});
 			assertThrows(IllegalArgumentException.class, () -> {
-				service.write(new Object());
+				settingsService.write(new Object());
 			});
 		}
 
 		@Test
 		void shouldStoreInDefaultSpace() {
-			service.register(Pojo4.class);
+			settingsService.register(Pojo4.class);
 
 			Pojo4 write = new Pojo4();
 			write.setField1("hi");
-			service.write(write, null);
+			settingsService.write(write);
 
-			assertThat(tempDir.resolve(".config/test/default-space-p1.yml")).exists();
+			assertThat(tempDir.resolve(".config/test/default-space-p1-v1.yml")).exists();
 
-			Pojo4 read = service.read(Pojo4.class, null, null);
+			Pojo4 read = settingsService.read(Pojo4.class);
 			assertThat(read).isNotNull();
 			assertThat(read.getField1()).isEqualTo("hi");
 		}
 
+	}
+
+	@Nested
+	class Migration {
+
+		@BeforeEach
+		void setup() {
+			settingsService.register(Pojo10.class);
+			settingsService.register(Pojo11.class);
+		}
+
+		@Test
+		void shouldMigrate() throws IOException {
+			String v1Yaml =
+					"""
+					---
+					version: 1
+					field1: value1
+					""";
+			Path dir = tempDir.resolve(".config").resolve("test");
+			Files.createDirectories(dir);
+			Files.write(dir.resolve("default-space-pojos1-v1.yml"), v1Yaml.getBytes());
+			Pojo11 pojo11 = settingsService.read(Pojo11.class);
+			assertThat(tempDir.resolve(".config/test/default-space-pojos1-v2.yml")).doesNotExist();
+			assertThat(pojo11).isNotNull();
+			assertThat(pojo11.getField2()).isEqualTo("value1");
+			settingsService.write(pojo11);
+			assertThat(tempDir.resolve(".config/test/default-space-pojos1-v2.yml")).exists();
+		}
 	}
 
 	// @Test
