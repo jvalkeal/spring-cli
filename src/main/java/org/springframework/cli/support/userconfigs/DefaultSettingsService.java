@@ -17,6 +17,7 @@ package org.springframework.cli.support.userconfigs;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -145,12 +146,76 @@ public class DefaultSettingsService implements SettingsService {
 	public <T> T read(Class<T> type, String space, Supplier<T> defaultSupplier) {
 		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
 		PartitionInfo info = checkRegistered(type, spaceName);
+
+		// int[] xxx = xxx(spaceName, info.name());
+		int toVersion = info.partition.version();
+		XxxInfo[] xxx2 = xxx2(spaceName, info.name());
+		// if (toVersion >)
+
 		Path path = resolvePath(type, space, info.name, info.partition().version());
-		T obj = doRead(path, type, info);
-		if (obj == null && defaultSupplier != null) {
-			obj = defaultSupplier.get();
+
+		T obj = null;
+		if (Files.exists(path)) {
+			obj = doRead(path, type, info.partition().field());
+			if (obj == null && defaultSupplier != null) {
+				obj = defaultSupplier.get();
+			}
 		}
+		else {
+			try {
+				obj = migrate(type, spaceName, info.name(), toVersion, xxx2);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+
+		// T obj = doRead(path, type, info.partition().field());
+		// if (obj == null && defaultSupplier != null) {
+		// 	obj = defaultSupplier.get();
+		// }
 		return obj;
+	}
+
+	private <T> T migrate(Class<T> typex, String spaceName, String partitionName, int toVersion, XxxInfo[] xxx2)
+			throws IOException {
+
+		T objx = null;
+		Object obj = null;
+		Class<?> sourceType = null;
+		for (XxxInfo xxx : xxx2) {
+			sourceType = xxx.type();
+			Class<?> targetType = null;
+			if (toVersion == xxx.version()) {
+
+			}
+			else if (toVersion > xxx.version()) {
+
+			}
+			Class<?> type = xxx.type();
+			int version = xxx.version();
+			Path path = resolvePath(type, spaceName, partitionName, version);
+			if (Files.exists(path) && typex == type) {
+				return doRead(path, typex, partitionName);
+			}
+			else {
+				boolean canMigrate = migrationService.canMigrate(sourceType, targetType);
+				if (canMigrate) {
+					InputStream in = new DataInputStream(Files.newInputStream(path));
+					ObjectNode objectNode = objectMapper.readValue(in, ObjectNode.class);
+					// JsonNode versionNode = objectNode.get(field);
+
+					Object treeToValue = objectMapper.treeToValue(objectNode, sourceType);
+					obj = migrationService.migrate(treeToValue, targetType);
+				}
+
+			}
+			if (toVersion == xxx.version()) {
+				objx = (T)obj;
+			}
+		}
+
+		return objx;
 	}
 
 	@Override
@@ -180,8 +245,40 @@ public class DefaultSettingsService implements SettingsService {
 		this.pathProvider = pathProvider;
 	}
 
+	private record XxxInfo(Class<?> type, int version) implements Comparable<XxxInfo> {
 
-	private <T> T doRead(Path path, Class<T> type, PartitionInfo info) {
+		@Override
+		public int compareTo(XxxInfo other) {
+			return Integer.compare(version, other.version());
+		}
+	}
+
+	private XxxInfo[] xxx2(String space, String partition) {
+		Map<String, Map<Class<?>, Partition>> spaceMapping = spaceMappings.get(space);
+		Map<Class<?>, Partition> classMapping = spaceMapping.get(partition);
+		return classMapping.entrySet().stream()
+			.map(e -> new XxxInfo(e.getKey(), e.getValue().version()))
+			.sorted()
+			.toArray(XxxInfo[]::new)
+			;
+	}
+
+
+	private int[] xxx(String space, String partition) {
+		Map<String, Map<Class<?>, Partition>> spaceMapping = spaceMappings.get(space);
+		Map<Class<?>, Partition> classMapping = spaceMapping.get(partition);
+		for (Entry<Class<?>, Partition> entry : classMapping.entrySet()) {
+			entry.getValue().version();
+		}
+		int[] arr = classMapping.entrySet().stream()
+			.mapToInt(e -> e.getValue().version())
+			.sorted()
+			.toArray();
+		return arr;
+	}
+
+
+	private <T> T doRead(Path path, Class<T> type, String field) {
 		log.debug("About to read type {} from path {}", type, path);
 
 		// for a space and partition get existing versions.
@@ -194,11 +291,11 @@ public class DefaultSettingsService implements SettingsService {
 			InputStream in = new DataInputStream(Files.newInputStream(path));
 
 			ObjectNode objectNode = objectMapper.readValue(in, ObjectNode.class);
-			JsonNode versionNode = objectNode.get(info.partition().field());
+			JsonNode versionNode = objectNode.get(field);
 			String version = null;
 			if (versionNode != null) {
 				version = versionNode.asText();
-				objectNode.remove(info.partition().field());
+				objectNode.remove(field);
 			}
 			String versionx = version;
 
