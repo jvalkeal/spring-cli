@@ -99,7 +99,7 @@ class SettingsScanRegistrar implements ImportBeanDefinitionRegistrar {
 		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.setEnvironment(this.environment);
 		scanner.setResourceLoader(this.resourceLoader);
-		scanner.addIncludeFilter(new AnnotationTypeFilter(Settings.class));
+		scanner.addIncludeFilter(new AnnotationTypeFilter(SettingsBinding.class));
 		TypeExcludeFilter typeExcludeFilter = new TypeExcludeFilter();
 		typeExcludeFilter.setBeanFactory((BeanFactory) registry);
 		scanner.addExcludeFilter(typeExcludeFilter);

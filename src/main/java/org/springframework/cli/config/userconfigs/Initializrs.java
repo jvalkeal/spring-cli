@@ -18,14 +18,14 @@ package org.springframework.cli.config.userconfigs;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.cli.support.userconfigs.Settings;
+import org.springframework.cli.support.userconfigs.SettingsBinding;
 
 /**
  * User settigs for {@code initializr} commands.
  *
  * @author Janne Valkealahti
  */
-@Settings(version = "1")
+@SettingsBinding(partition = "initializrs")
 public class Initializrs {
 
 	private Map<String, Initializr> initializrs = new HashMap<>();

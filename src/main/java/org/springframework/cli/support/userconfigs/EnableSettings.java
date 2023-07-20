@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 import org.springframework.context.annotation.Import;
 
 /**
- * Enable support for {@link Settings @UserConfigs} annotated classes.
+ * Enable support for {@link SettingsBinding @UserConfigs} annotated classes.
  * {@code @UserConfigs} classes can be registered directly on this annotation.
  *
  * @author Janne Valkealahti

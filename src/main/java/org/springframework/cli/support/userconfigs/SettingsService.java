@@ -38,6 +38,9 @@ import org.springframework.lang.Nullable;
  */
 public interface SettingsService {
 
+	public static final String DEFAULT_SPACE = "default-space";
+	public static final String DEFAULT_FIELD = "version";
+
 	/**
 	 * Read user configs from a storage.
 	 *

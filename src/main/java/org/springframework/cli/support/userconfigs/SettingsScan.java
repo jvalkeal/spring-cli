@@ -26,7 +26,7 @@ import org.springframework.core.annotation.AliasFor;
 
 /**
  * Configures the base packages used when scanning for
- * {@link Settings @UserConfigs} classes. One of
+ * {@link SettingsBinding @UserConfigs} classes. One of
  * {@link #basePackageClasses()}, {@link #basePackages()} or its alias
  * {@link #value()} may be specified to define specific packages to scan. If
  * specific packages are not defined scanning will occur from the package of the

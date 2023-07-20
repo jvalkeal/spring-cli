@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -87,70 +88,52 @@ public class DefaultSettingsService implements SettingsService {
 	}
 
 	public void register(Class<?> type) {
-		Settings sbAnn = AnnotationUtils.findAnnotation(type, Settings.class);
+		SettingsBinding sbAnn = AnnotationUtils.findAnnotation(type, SettingsBinding.class);
 		Assert.notNull(sbAnn, "Class needs to have SettingsBindings annotation");
-		register(type, sbAnn.partition(), sbAnn.space(), new HashSet<>(Arrays.asList(sbAnn.versions())), sbAnn.version(), sbAnn.field());
+		register(type, sbAnn.partition(), sbAnn.space(), sbAnn.version(), sbAnn.field());
 	}
 
-	private final Map<String, Map<String, PartitionInfo>> spaceBindings = new HashMap<>();
+	// private final Map<String, Map<String, PartitionInfo>> spaceBindings = new HashMap<>();
 
-	private static class PartitionInfo {
+	// space -> partition -> clazz -> (version, field)
+	private final Map<String, Map<String, Map<Class<?>, Partition>>> spaceMappings = new HashMap<>();
 
-		String version;
-		// Set<String> versions = new HashSet<>();
-		Map<Class<?>, String> versions = new HashMap<>();
-		String field;
-		String partition;
+	private record Partition(int version, String field) {
 	}
 
-	private void register(Class<?> type, String partition, @Nullable String space, Set<String> versions, @Nullable String version,
+	private record PartitionInfo(String name, Partition partition){}
+
+	// private static class PartitionInfo {
+	// 	// int version;
+	// 	Map<Class<?>, Integer> versions = new HashMap<>();
+	// 	String field;
+	// 	// String partition;
+	// }
+
+	private void register(Class<?> type, String partition, @Nullable String space, @Nullable int version,
 			@Nullable String field) {
 		log.debug("Registering class {}", type);
 		space = StringUtils.hasText(space) ? space : null;
-		field = StringUtils.hasText(field) ? field : DEFAULT_VERSION_FIELD;
-		version = StringUtils.hasText(version) ? version : DEFAULT_VERSION;
-		if (versions == null) {
-			versions = new HashSet<>();
-		}
-		versions.add(version);
+		String fieldx = StringUtils.hasText(field) ? field : DEFAULT_VERSION_FIELD;
 
-		Map<String, PartitionInfo> spaceBinding = spaceBindings.computeIfAbsent(space, key -> new HashMap<>());
-		PartitionInfo partitionInfo = spaceBinding.computeIfAbsent(partition, key -> new PartitionInfo());
-		partitionInfo.version = version;
-		// partitionInfo.versions.add(version);
-		partitionInfo.versions.put(type, version);
-		partitionInfo.field = field;
-		partitionInfo.partition = partition;
-
-		// Map<String, PartitionInfo2> partitionBinding = spaceBindings.computeIfAbsent(partition, key -> new HashMap<>());
-		// spaceBinding.put(partition, partitionInfo2);
-
-		// Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.computeIfAbsent(space, key -> new HashMap<>());
-		// SpaceTypeInfo spaceTypeInfo = new SpaceTypeInfo(version, versions, field, migration);
-		// spaceBinding.put(type, spaceTypeInfo);
+		Map<String, Map<Class<?>, Partition>> spaceMapping = spaceMappings.computeIfAbsent(space,
+				key -> new HashMap<>());
+		Map<Class<?>, Partition> classMapping = spaceMapping.computeIfAbsent(partition, key -> new HashMap<>());
+		classMapping.computeIfAbsent(type, key -> new Partition(version, fieldx));
 	}
 
 	private PartitionInfo checkRegistered(Class<?> type, String space) {
-		Map<String, PartitionInfo> map1 = spaceBindings.get(space);
-		Assert.notNull(map1, () -> String.format("No classes registered with space %s", space));
-		PartitionInfo orElse = map1.entrySet().stream()
-			.filter(e -> e.getValue().versions.keySet().contains(type))
-			.map(e -> e.getValue())
-			.findFirst()
-			.orElse(null)
-			;
-
-		return orElse;
+		Map<String, Map<Class<?>, Partition>> spaceMapping = spaceMappings.get(space);
+		Assert.notNull(spaceMapping, () -> String.format("No classes registered with space %s", space));
+		for (Entry<String, Map<Class<?>, Partition>> entry1 : spaceMapping.entrySet()) {
+			for (Entry<Class<?>, Partition> entry2 : entry1.getValue().entrySet()) {
+				if (entry2.getKey() == type) {
+					return new PartitionInfo(entry1.getKey(), entry2.getValue());
+				}
+			}
+		}
+		return null;
 	}
-
-	// private SpaceTypeInfo checkRegistered(Class<?> type, String space) {
-	// 	Map<Class<?>, SpaceTypeInfo> spaceBinding = spaceBindings.get(space);
-	// 	Assert.notNull(spaceBinding, () -> String.format("No classes registered with space %s", space));
-	// 	SpaceTypeInfo info = spaceBinding.get(type);
-	// 	Assert.isTrue(type != null,
-	// 			() -> String.format("Class type %s not registered in space %s", type, space));
-	// 	return info;
-	// }
 
 	@Override
 	public <T> T read(Class<T> type) {
@@ -169,8 +152,9 @@ public class DefaultSettingsService implements SettingsService {
 
 	@Override
 	public <T> T read(Class<T> type, String space, Supplier<T> defaultSupplier) {
-		PartitionInfo info = checkRegistered(type, space);
-		Path path = resolvePath(type, space, info.partition);
+		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
+		PartitionInfo info = checkRegistered(type, spaceName);
+		Path path = resolvePath(type, space, info.name);
 		T obj = doRead(path, type, info);
 		if (obj == null && defaultSupplier != null) {
 			obj = defaultSupplier.get();
@@ -185,9 +169,8 @@ public class DefaultSettingsService implements SettingsService {
 
 
 	private Path resolvePath(Class<?> type, String space, String partition) {
-		String spaceName = StringUtils.hasText(space) ? space : "default-space";
-		// String name = spaceName + "-" + nameProvider.apply(type);
-		String name = spaceName + "-" + partition;
+		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
+		String name = spaceName + "-" + partition + ".yml";
 		Path dir = getConfigDir();
 		return dir.resolve(name);
 	}
@@ -196,37 +179,15 @@ public class DefaultSettingsService implements SettingsService {
 	public void write(Object value, String space) {
 		log.debug("Writing");
 		Assert.notNull(value, "value cannot be null");
-		PartitionInfo info = checkRegistered(value.getClass(), space);
-		checkRegistered(value.getClass(), space);
-		Path path = resolvePath(value.getClass(), space, info.partition);
+		String spaceName = StringUtils.hasText(space) ? space : SettingsService.DEFAULT_SPACE;
+		PartitionInfo info = checkRegistered(value.getClass(), spaceName);
+		Path path = resolvePath(value.getClass(), space, info.name);
 		doWrite(path, value, info);
 	}
 
 	public void setPathProvider(Function<String, Path> pathProvider) {
 		this.pathProvider = pathProvider;
 	}
-
-	// private ObjectNode migration(ObjectNode objectNode, String fromVersion, Set<String> versions, UserConfigsMigration migration) {
-	// 	if (migration == null) {
-	// 		return objectNode;
-	// 	}
-	// 	List<String> migrateVersions = versions.stream()
-	// 		.filter(v -> v.compareTo(fromVersion) > 0)
-	// 		.sorted()
-	// 		.collect(Collectors.toList());
-	// 	String from = fromVersion;
-	// 	String to = null;
-	// 	for (String version : migrateVersions) {
-	// 		to = version;
-	// 		ObjectNode migratedObjectNode = migration.migrate(objectNode, from, to);
-	// 		if (migratedObjectNode == null) {
-	// 			return objectNode;
-	// 		}
-	// 		objectNode = migratedObjectNode;
-	// 		from = version;
-	// 	}
-	// 	return objectNode;
-	// }
 
 
 	private <T> T doRead(Path path, Class<T> type, PartitionInfo info) {
@@ -239,26 +200,25 @@ public class DefaultSettingsService implements SettingsService {
 			InputStream in = new DataInputStream(Files.newInputStream(path));
 
 			ObjectNode objectNode = objectMapper.readValue(in, ObjectNode.class);
-			JsonNode versionNode = objectNode.get(info.field);
+			JsonNode versionNode = objectNode.get(info.partition().field());
 			String version = null;
 			if (versionNode != null) {
 				version = versionNode.asText();
-				objectNode.remove(info.field);
+				objectNode.remove(info.partition().field());
 			}
 			String versionx = version;
 
-			Class<?> sourceType = info.versions.entrySet().stream().filter(e -> e.getValue().equals(versionx))
-					.map(e -> e.getKey()).findFirst().orElse(null);
+			// Class<?> sourceType = info.versions.entrySet().stream().filter(e -> e.getValue().equals(versionx))
+			// 		.map(e -> e.getKey()).findFirst().orElse(null);
+			// if (migrationService != null) {
+			// 	Class<?> targetType = type;
+			// 	boolean canMigrate = migrationService.canMigrate(sourceType, targetType);
+			// 	if (canMigrate) {
+			// 		Object treeToValue = objectMapper.treeToValue(objectNode, sourceType);
+			// 		return migrationService.migrate(treeToValue, type);
+			// 	}
 
-			if (migrationService != null) {
-				Class<?> targetType = type;
-				boolean canMigrate = migrationService.canMigrate(sourceType, targetType);
-				if (canMigrate) {
-					Object treeToValue = objectMapper.treeToValue(objectNode, sourceType);
-					return migrationService.migrate(treeToValue, type);
-				}
-
-			}
+			// }
 
 			// objectNode = migration(objectNode, version, info.versions, info.migration);
 			return objectMapper.treeToValue(objectNode, type);
@@ -277,7 +237,8 @@ public class DefaultSettingsService implements SettingsService {
 			OutputStream out = new DataOutputStream(Files.newOutputStream(path));
 
 			ObjectNode objectNode = objectMapper.valueToTree(value);
-			objectNode.put(info.field, info.version);
+			// Integer v = info.versions.get(value.getClass());
+			objectNode.put(info.partition().field(), info.partition().version());
 			objectMapper.writeValue(out, objectNode);
 		} catch (Exception e) {
 			throw new RuntimeException("Unable to write to path " + path, e);

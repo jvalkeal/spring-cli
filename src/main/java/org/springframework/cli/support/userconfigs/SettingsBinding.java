@@ -24,15 +24,13 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-public @interface Settings {
+public @interface SettingsBinding {
 
-	String partition() default "";
+	String partition();
 
-	String space() default "";
+	String space() default SettingsService.DEFAULT_SPACE;
 
-	String version() default "";
+	int version() default 0;
 
-	String[] versions() default {};
-
-	String field() default "version";
+	String field() default SettingsService.DEFAULT_FIELD;
 }

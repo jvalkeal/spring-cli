@@ -15,9 +15,9 @@
  */
 package org.springframework.cli.support.userconfigs.config3;
 
-import org.springframework.cli.support.userconfigs.Settings;
+import org.springframework.cli.support.userconfigs.SettingsBinding;
 
-@Settings(partition = "p1", space = "", version = "2", field = "version")
+@SettingsBinding(partition = "p1", version = 2)
 public class Pojo5 {
 
 	String field2;
