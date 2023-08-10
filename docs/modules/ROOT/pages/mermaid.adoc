@@ -1,0 +1,13 @@
+= Mermaid Sample
+
+[mermaid]
+----
+sequenceDiagram
+autonumber
+
+participant a as Alice
+participant b as Bob
+
+a ->>+ b : Hello.
+b -->>- a : Hi, there.
+----

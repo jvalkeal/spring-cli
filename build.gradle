@@ -177,12 +177,13 @@ antora {
 	// 	'ALGOLIA_APP_ID': '244V8V9FGG',
 	// 	'ALGOLIA_INDEX_NAME': 'framework-docs'
 	// ]
+	// '@springio/antora-extensions': '1.3.0',
 	dependencies = [
 		'@antora/atlas-extension': '1.0.0-alpha.1',
 		'@antora/collector-extension': '1.0.0-alpha.3',
 		'@asciidoctor/tabs': '1.0.0-beta.3',
 		'@opendevise/antora-release-line-extension': '1.0.0-alpha.2',
-		'@springio/antora-extensions': '1.3.0',
+		'@springio/antora-extensions': '/home/jvalkealahti/repos/jvalkeal/antora-extensions',
 		'@springio/asciidoctor-extensions': '1.0.0-alpha.9'
 	]
 }

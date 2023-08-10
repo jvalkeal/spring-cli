@@ -1,0 +1,6 @@
+= Asciinema Sample
+
+[asciinema]
+----
+include::example$initializr-1.cast[]
+----
