@@ -1,6 +1,7 @@
 environment:
   properties:
     jpackageDir: out/jreleaser/assemble/spring-cli-installer/jpackage
+    jlinkDir: out/jreleaser/assemble/spring-cli-jlink/jlink/
 
 project:
   name: spring-cli
@@ -70,6 +71,7 @@ assemble:
 release:
   github:
     releaseName: '{{projectVersion}}'
+    overwrite: true
     changelog:
       enabled: false
 
@@ -78,6 +80,17 @@ distributions:
     type: SINGLE_JAR
     artifacts:
       - path: build/libs/{{distributionName}}-{{projectVersion}}.jar
+  spring-cli-jlink:
+    type: JLINK
+    brew:
+      active: ALWAYS
+      multiPlatform: true
+      tap:
+        name: homebrew-spring-cli
+    artifacts:
+      - path: '{{jlinkDir}}/org.springframework.experimental.spring-cli-{{projectVersionNumber}}-linux-x86_64.zip'
+        transform: '{{distributionName}}/{{distributionName}}-{{projectEffectiveVersion}}-linux.x86_64.zip'
+        platform: 'linux-x86_64'
   spring-cli-installer:
     type: NATIVE_PACKAGE
     artifacts:
