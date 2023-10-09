@@ -88,7 +88,7 @@ distributions:
       tap:
         name: homebrew-spring-cli
     artifacts:
-      - path: '{{jlinkDir}}/org.springframework.experimental.spring-cli-{{projectVersionNumber}}-linux-x86_64.zip'
+      - path: '{{jlinkDir}}/org.springframework.experimental.spring-cli-{{projectVersion}}-linux-x86_64.zip'
         transform: '{{distributionName}}/{{distributionName}}-{{projectEffectiveVersion}}-linux.x86_64.zip'
         platform: 'linux-x86_64'
   spring-cli-installer:
