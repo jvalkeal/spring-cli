@@ -36,6 +36,12 @@ jobs:
           name: jpackage
           path: out/jreleaser/assemble/spring-cli-installer/jpackage
 
+      - name: Download jlink
+        uses: actions/download-artifact@v3
+        with:
+          name: jlink
+          path: out/jreleaser/assemble/spring-cli-jlink/jlink
+
       - name: Release
         uses: jreleaser/release-action@v2
         with:
