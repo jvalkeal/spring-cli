@@ -82,11 +82,11 @@ distributions:
       - path: build/libs/{{distributionName}}-{{projectVersion}}.jar
   spring-cli-jlink:
     type: JLINK
-    brew:
-      active: ALWAYS
-      multiPlatform: true
-      tap:
-        name: homebrew-spring-cli
+    # brew:
+    #   active: ALWAYS
+    #   multiPlatform: true
+    #   tap:
+    #     name: homebrew-spring-cli
     artifacts:
       - path: '{{jlinkDir}}/org.springframework.experimental.spring-cli-{{projectVersion}}-linux-x86_64.zip'
         transform: '{{distributionName}}/{{distributionName}}-{{projectEffectiveVersion}}-linux.x86_64.zip'
