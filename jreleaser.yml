@@ -84,6 +84,7 @@ distributions:
     type: JLINK
     brew:
       active: ALWAYS
+      formulaName: spring-cli
       multiPlatform: true
       tap:
         name: homebrew-spring-cli
