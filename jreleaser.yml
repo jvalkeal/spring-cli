@@ -29,7 +29,6 @@ assemble:
   jlink:
     spring-cli-standalone:
       active: ALWAYS
-      exported: false
       executable: spring
       jdeps:
         multiRelease: base
@@ -81,7 +80,6 @@ distributions:
     artifacts:
       - path: build/libs/{{distributionName}}-{{projectVersion}}.jar
   spring-cli-standalone:
-    type: JLINK
     brew:
       active: ALWAYS
       formulaName: spring-cli
