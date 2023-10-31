@@ -12,7 +12,9 @@ jobs:
       - name: test
         run: |
           wget https://github.com/jreleaser/jreleaser/releases/download/v1.8.0/jreleaser-native-1.8.0-osx-x86_64.zip
+          unzip jreleaser-native-1.8.0-osx-x86_64.zip
           ls
+          find jreleaser-standalone-1.8.0-osx-x86_64
   # e2e:
   #   runs-on: ${{ matrix.os }}
   #   strategy:
