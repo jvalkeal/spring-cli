@@ -9,11 +9,16 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: test
+      - name: test jreleaser
         run: |
           wget https://github.com/jreleaser/jreleaser/releases/download/v1.8.0/jreleaser-standalone-1.8.0-osx-x86_64.zip
           unzip jreleaser-standalone-1.8.0-osx-x86_64.zip
           codesign --verify --verbose jreleaser-standalone-1.8.0-osx-x86_64/bin/java
+      - name: test spring-cli
+        run: |
+          wget https://github.com/spring-projects-experimental/spring-cli/releases/download/v0.7.2/spring-cli-standalone-0.7.2-osx.x86_64.zip
+          unzip spring-cli-standalone-0.7.2-osx.x86_64.zip
+          codesign --verify --verbose org.springframework.experimental.spring-cli-0.7.2-linux-x86_64/bin/java
   # e2e:
   #   runs-on: ${{ matrix.os }}
   #   strategy:
