@@ -78,6 +78,12 @@ assemble:
         console: true
         dirChooser: true
         resourceDir: 'src/jreleaser/jpackage/windows'
+      osx:
+        types: [pkg]
+        appName: SpringCli
+        packageName: SpringCli
+        packageIdentifier: org.springframework.cli
+        resourceDir: 'src/jreleaser/jpackage/osx'
 
 platform:
   replacements:
@@ -124,6 +130,9 @@ distributions:
       - path: '{{jpackageDir}}/spring-{{projectVersionNumber}}-1.x86_64.rpm'
         transform: '{{distributionName}}/{{distributionName}}-{{projectVersion}}-1.x86_64.rpm'
         platform: 'linux-x86_64'
+      - path: '{{jpackageDir}}/spring-{{projectVersionNumber}}-osx-x86_64.pkg'
+        transform: '{{distributionName}}/{{distributionName}}-{{projectVersion}}-osx-x86_64.pkg'
+        platform: 'osx-x86_64'
       - path: '{{jpackageDir}}/spring-{{projectVersionNumber}}.msi'
         transform: '{{distributionName}}/{{distributionName}}-{{projectVersion}}-windows-x86_64.msi'
         platform: 'windows-x86_64'
