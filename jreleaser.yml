@@ -130,7 +130,7 @@ distributions:
       - path: '{{jpackageDir}}/spring-{{projectVersionNumber}}-1.x86_64.rpm'
         transform: '{{distributionName}}/{{distributionName}}-{{projectVersion}}-1.x86_64.rpm'
         platform: 'linux-x86_64'
-      - path: '{{jpackageDir}}/SpringCli-{{projectVersionNumber}}-osx-x86_64.pkg'
+      - path: '{{jpackageDir}}/SpringCli-{{projectVersionNumber}}.pkg'
         transform: '{{distributionName}}/{{distributionName}}-{{projectVersion}}-osx-x86_64.pkg'
         platform: 'osx-x86_64'
       - path: '{{jpackageDir}}/spring-{{projectVersionNumber}}.msi'
