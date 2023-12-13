@@ -2,8 +2,6 @@ environment:
   properties:
     jpackageDir: out/jreleaser/assemble/spring-cli-installer/jpackage
     jlinkDir: out/jreleaser/assemble/spring-cli-standalone/jlink/
-    springCliOrg: jvalkeal-org
-    # springCliOrg: spring-cli-projects
 
 project:
   name: spring-cli
@@ -108,8 +106,7 @@ distributions:
       templateDirectory: src/jreleaser/templates/jlink/brew
       repository:
         # owner: spring-cli-projects
-        # owner: jvalkeal-org
-        owner: '{{springCliOrg}}'
+        owner: jvalkeal-org
         name: homebrew-spring-cli
       # tap:
       #   name: homebrew-spring-cli
