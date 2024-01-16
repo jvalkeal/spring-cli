@@ -15,6 +15,23 @@ jobs:
     runs-on: ubuntu-latest
     name: Release
     steps:
+<<<<<<< HEAD
+=======
+      - uses: actions/create-github-app-token@v1
+        id: cli-repo-token
+        with:
+          app-id: ${{ vars.SPRING_CLI_BOT_APP_ID }}
+          private-key: ${{ secrets.SPRING_CLI_BOT_APP_PRIVATE_KEY }}
+          owner: ${{ vars.SPRING_CLI_REPO_TOKEN_OWNER }}
+          repositories: ${{ vars.SPRING_CLI_REPO_TOKEN_REPOSITORIES }}
+      - uses: actions/create-github-app-token@v1
+        id: cli-org-token
+        with:
+          app-id: ${{ vars.SPRING_CLI_BOT_APP_ID }}
+          private-key: ${{ secrets.SPRING_CLI_BOT_APP_PRIVATE_KEY }}
+          owner: ${{ vars.SPRING_CLI_ORG_TOKEN_OWNER }}
+          repositories: ${{ vars.SPRING_CLI_ORG_TOKEN_REPOSITORIES }}
+>>>>>>> 13c3791 (stash github app changes)
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
@@ -45,12 +62,20 @@ jobs:
       - name: Release
         uses: jreleaser/release-action@v2
         with:
+<<<<<<< HEAD
           version: 1.12.0
           arguments: full-release
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_REPO_JR_TOKEN }}
           JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_ORG_JR_TOKEN }}
           JRELEASER_WINGET_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_ORG_JR_TOKEN }}
+=======
+          version: early-access
+          arguments: -c ${{ vars.SPRING_CLI_JRELEASER_CONFIG }} full-release
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ steps.cli-repo-token.outputs.token }}
+          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ steps.cli-org-token.outputs.token }}
+>>>>>>> 13c3791 (stash github app changes)
           JRELEASER_PROJECT_VERSION: ${{ inputs.version }}
 
       - name: JReleaser release output

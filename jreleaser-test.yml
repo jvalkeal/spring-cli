@@ -5,32 +5,14 @@ environment:
 
 project:
   name: spring-cli
-  description: Spring CLI improves your productivity when creating new Spring projects or adding functionality to existing projects
-  longDescription: |
-    The goal of the Spring CLI is to increase your productivity when creating new
-    projects and adding functionality to existing projects. It does this by
-    providing the following high-level features.
-
-    The command boot new clones an external project and optionally perform a package
-    refactoring to your chosen package name. You can also optionally specify the new
-    project’s group id, artifact id, and version
-
-    The command boot add will merge an external project to your current project. It
-    performs an intelligent merge of project dependencies, plug-ins, annotations,
-    application configuration files, and refactoring of the external project code
-    into your current project’s package structure.
-
-    User-provided commands provide a user-friendly way to define and execute custom
-    commands that can perform everyday tasks on your project. With declarative command
-    definitions living alongside your code, you can easily create new controllers,
-    add dependencies, or configure files. You can also execute other command-line
-    applications as needed resembling a client-side GitHub Actions like experience.
+  description: Spring Cli
+  longDescription: Spring Cli
   vendor: VMware
   authors:
     - jvalkeal
   license: Apache-2.0
   links:
-    homepage: https://spring.io/projects/spring-cli
+    homepage: https://github.com/spring-projects-experimental/spring-cli
   java:
     groupId: org.springframework.cli
     version: 17
@@ -72,13 +54,13 @@ assemble:
         - path: build/completion/zsh/_spring
           transform: completion/zsh/_spring
       targetJdks:
-        - path: 'build/jdks/bellsoft17Linux/jdk-17.0.11'
+        - path: 'build/jdks/bellsoft17Linux/jdk-17.0.9'
           platform: 'linux-x86_64'
-        - path: 'build/jdks/bellsoft17Osx/jdk-17.0.11.jdk'
+        - path: 'build/jdks/bellsoft17Osx/jdk-17.0.9.jdk'
           platform: 'osx-x86_64'
-        - path: 'build/jdks/bellsoft17OsxArm/jdk-17.0.11.jdk'
+        - path: 'build/jdks/bellsoft17OsxArm/jdk-17.0.9.jdk'
           platform: 'osx-aarch_64'
-        - path: 'build/jdks/bellsoft17Windows/jdk-17.0.11'
+        - path: 'build/jdks/bellsoft17Windows/jdk-17.0.9'
           platform: 'windows-x86_64'
 
   jpackage:
@@ -101,7 +83,6 @@ assemble:
         types: [msi]
         console: true
         dirChooser: true
-        icon: 'src/jreleaser/images/spring-cli.ico'
         resourceDir: 'src/jreleaser/jpackage/windows'
 
 platform:
@@ -126,7 +107,6 @@ distributions:
       multiPlatform: true
       templateDirectory: src/jreleaser/templates/jlink/brew
       repository:
-        owner: spring-cli-projects
         name: homebrew-spring-cli
     artifacts:
       - path: '{{jlinkDir}}/{{distributionName}}-{{projectVersion}}-linux-x86_64.zip'
@@ -143,16 +123,6 @@ distributions:
         platform: 'windows-x86_64'
   spring-cli-installer:
     type: NATIVE_PACKAGE
-    winget:
-      active: RELEASE
-      continueOnError: true
-      package:
-        name: spring-cli
-      repository:
-        active: ALWAYS
-        owner: spring-cli-projects
-        name: winget-spring-cli
-        commitMessage: 'spring-cli {{tagName}}'
     artifacts:
       - path: '{{jpackageDir}}/spring_{{projectVersionNumber}}-1_amd64.deb'
         transform: '{{distributionName}}/{{distributionName}}_{{projectVersion}}-1_amd64.deb'
