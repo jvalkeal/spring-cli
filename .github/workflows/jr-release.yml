@@ -71,7 +71,7 @@ jobs:
           JRELEASER_WINGET_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_ORG_JR_TOKEN }}
 =======
           version: early-access
-          arguments: -c ${{ vars.SPRING_CLI_JRELEASER_CONFIG }} full-release
+          arguments: full-release -c ${{ vars.SPRING_CLI_JRELEASER_CONFIG }}
         env:
           JRELEASER_GITHUB_TOKEN: ${{ steps.cli-repo-token.outputs.token }}
           JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ steps.cli-org-token.outputs.token }}
