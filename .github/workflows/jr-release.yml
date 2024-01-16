@@ -60,7 +60,7 @@ jobs:
         uses: jreleaser/release-action@v2
         with:
           version: early-access
-          arguments: -c ${{ vars.SPRING_CLI_JRELEASER_CONFIG }} full-release
+          arguments: full-release -c ${{ vars.SPRING_CLI_JRELEASER_CONFIG }}
         env:
           JRELEASER_GITHUB_TOKEN: ${{ steps.cli-repo-token.outputs.token }}
           JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ steps.cli-org-token.outputs.token }}
