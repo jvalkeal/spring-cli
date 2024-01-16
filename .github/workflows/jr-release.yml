@@ -15,6 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Release
     steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.PRIVATE_KEY }}
+          owner: jvalkeal
+          repositories: spring-cli,homebrew-spring-cli
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
@@ -48,8 +55,10 @@ jobs:
           version: early-access
           arguments: full-release
         env:
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_REPO_JR_TOKEN }}
-          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_ORG_JR_TOKEN }}
+          # JRELEASER_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_REPO_JR_TOKEN }}
+          # JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_ORG_JR_TOKEN }}
+          JRELEASER_GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           JRELEASER_PROJECT_VERSION: ${{ inputs.version }}
 
       - name: JReleaser release output
