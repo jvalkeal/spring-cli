@@ -27,12 +27,14 @@ import org.kohsuke.github.GitHubBuilder;
 import org.kohsuke.github.RateLimitChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Flux;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cli.config.SpringCliUserConfig;
 import org.springframework.cli.config.SpringCliUserConfig.Host;
 import org.springframework.cli.config.SpringCliUserConfig.Hosts;
 import org.springframework.cli.support.github.GithubDeviceFlow;
+import org.springframework.cli.support.github.GithubDeviceFlow.TokenRequestState;
 import org.springframework.cli.util.SpringCliTerminal;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
@@ -113,6 +115,24 @@ public class GithubCommands extends AbstractSpringCliCommands {
 			terminal.print("logged in to GitHub.");
 		}
 	}
+
+	@Command(command = "loginx", description = "Authenticate with GitHub.")
+	public void loginx() {
+		String clientId = getCliProperties().getGithub().getClientId();
+		String scopes = getCliProperties().getGithub().getDefaultScopes();
+
+		GithubDeviceFlow githubDeviceFlow = new GithubDeviceFlow("https://github.com");
+
+		Flux<TokenRequestState> requestDeviceFlowx = githubDeviceFlow.requestDeviceFlowx(webClientBuilder, clientId, scopes);
+		TokenRequestState blockLast = requestDeviceFlowx
+			.doOnNext(tk -> {
+				log.info("UUU {}", tk);
+			})
+			.blockLast()
+			;
+		log.info("UUU blocklast {}", blockLast);
+	}
+
 
 	/**
 	 * Logout command which essentially removes local token if exists.
