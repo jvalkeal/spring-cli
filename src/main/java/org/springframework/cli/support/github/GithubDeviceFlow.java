@@ -124,105 +124,43 @@ public class GithubDeviceFlow {
 
 	}
 
-	public record TokenRequestState(String deviceCode, String userCode, Integer expiresIn, Integer interval, String token) {
+	public record TokenRequestState(String deviceCode, String userCode, Integer expiresIn, Integer interval,
+			String verificationUri, String token) {
+
 		private static TokenRequestState of() {
-			return new TokenRequestState(null, null, null, null, null);
+			return new TokenRequestState(null, null, null, null, null, null);
 		}
-		private static TokenRequestState ofDeviceCode(TokenRequestState state, String deviceCode, String userCode, Integer expiresIn, Integer interval) {
-			return new TokenRequestState(deviceCode, userCode, expiresIn, interval, state.token());
+
+		private static TokenRequestState ofDeviceCode(TokenRequestState state, String deviceCode, String userCode,
+				Integer expiresIn, Integer interval, String verificationUri) {
+			return new TokenRequestState(deviceCode, userCode, expiresIn, interval, verificationUri, state.token());
 		}
+
 		private static TokenRequestState ofToken(TokenRequestState state, String token) {
-			return new TokenRequestState(state.deviceCode(), state.userCode(), state.expiresIn(), state.interval(), token);
+			return new TokenRequestState(state.deviceCode(), state.userCode(), state.expiresIn(), state.interval(),
+					state.verificationUri(), token);
 		}
 	}
 
 	public Flux<TokenRequestState> requestDeviceFlowx(WebClient.Builder webClientBuilder, String clientId, String scope) {
 		WebClient client = webClientBuilder.baseUrl(baseUrl).build();
-
-		// Flux<TokenRequestState> flatMapx =
-		// Flux.range(0, 2)
-		// 	.flatMap(step -> {
-		// 		return Mono.deferContextual(ctx -> {
-		// 			if (ctx.hasKey("access_token")) {
-		// 				log.info("DDD1");
-		// 				return Mono.just(TokenRequestState.ofToken(ctx.get("access_token")));
-		// 			}
-		// 			else if (ctx.hasKey("device_code")) {
-		// 				String code = ctx.get("device_code");
-		// 				log.info("DDD2 {}", code);
-		// 				Mono<TokenRequestState> flatMap =
-		// 				loginOauthAccessTokenRequest(client, clientId, ctx.get("device_code"))
-		// 				.flatMap(res -> Mono.deferContextual(ctxx -> {
-		// 					return Mono.just(TokenRequestState.ofCode(ctx.get("device_code")));
-		// 				}).contextWrite(ctxxx -> ctxxx.put("access_token", res))
-		// 				)
-		// 				;
-		// 				return flatMap;
-		// 			}
-		// 			else {
-		// 				log.info("DDD3");
-		// 				Mono<TokenRequestState> contextWrite =
-		// 				loginDeviceCodeRequest(client, clientId, scope)
-		// 					.flatMap(res -> Mono.deferContextual(ctxx -> {
-		// 						return Mono.just(TokenRequestState.of());
-		// 					}).contextWrite(ctxxx -> {
-		// 						log.info("DDD3 device_code {}", res);
-		// 						return ctxxx.put("device_code", res);
-		// 					})
-		// 					)
-		// 					;
-		// 				return contextWrite;
-		// 			}
-		// 		});
-		// 	})
-		// 	;
-
-
-
-		// Flux<TokenRequestState> flux =
-		// sink.asFlux()
-		// 	.doFirst(() -> {
-		// 			;
-		// 	})
-		// 	;
-
-		// Flux<TokenRequestState> asFlux = sink.asFlux();
-		// asFlux = asFlux.doFirst(() -> {
-		// 	log.info("XXX1 doFirst");
-		// 	loginDeviceCodeRequest(client, clientId, scope)
-		// 		.subscribe(ddd -> {
-		// 			log.info("XXX2 data {}", ddd);
-		// 			sink.emitNext(TokenRequestState.ofCode(ddd), EmitFailureHandler.FAIL_FAST);
-		// 		});
-		// });
-
-
-
-		// return flatMapx;
-
 		Many<TokenRequestState> sink = Sinks.many().unicast().onBackpressureBuffer();
-
-		Mono<TokenRequestState> loginChain =
-		Mono.just(TokenRequestState.of())
+		Mono<TokenRequestState> loginChain = Mono.just(TokenRequestState.of())
 			.flatMap(state -> loginDeviceCodeRequest(client, clientId, scope, state, sink))
 			.flatMap(state -> loginOauthAccessTokenRequest(client, clientId, state, sink))
 			.doOnTerminate(() -> {
-				log.info("XXX3 doOnTerminate");
 				sink.emitComplete(EmitFailureHandler.FAIL_FAST);
-			})
-			;
-
-		Flux<TokenRequestState> flux =
-		sink.asFlux()
+			});
+		Flux<TokenRequestState> flux = sink.asFlux()
 			.doFirst(() -> {
 				loginChain.subscribe();
-			})
-			;
+			});
 
 		return flux;
 	}
 
-	private Mono<TokenRequestState> loginDeviceCodeRequest(WebClient client, String clientId, String scope, TokenRequestState state, Many<TokenRequestState> sink) {
+	private static Mono<TokenRequestState> loginDeviceCodeRequest(WebClient client, String clientId, String scope,
+			TokenRequestState state, Many<TokenRequestState> sink) {
 		return client.post()
 			.uri(uriBuilder -> uriBuilder.path("login/device/code")
 				.queryParam("client_id", clientId)
@@ -231,14 +169,21 @@ public class GithubDeviceFlow {
 			.accept(MediaType.APPLICATION_JSON)
 			.retrieve()
 			.bodyToMono(RESPONSE_TYPE_REFERENCE)
-			.map(response -> TokenRequestState.ofDeviceCode(state, response.get("device_code"), response.get("user_code"), Integer.parseInt(response.get("expires_in")), Integer.parseInt(response.get("interval"))))
+			.map(response -> {
+				String deviceCode = response.get("device_code");
+				String userCode = response.get("user_code");
+				Integer expiresIn = Integer.parseInt(response.get("expires_in"));
+				Integer interval = Integer.parseInt(response.get("interval"));
+				String verificationUri = response.get("verification_uri");
+				return TokenRequestState.ofDeviceCode(state, deviceCode, userCode, expiresIn, interval, verificationUri);
+			})
 			.doOnNext(trs -> {
 				sink.emitNext(trs, EmitFailureHandler.FAIL_FAST);
-			})
-			;
+			});
 	}
 
-	private Mono<TokenRequestState> loginOauthAccessTokenRequest(WebClient client, String clientId, TokenRequestState state, Many<TokenRequestState> sink) {
+	private static Mono<TokenRequestState> loginOauthAccessTokenRequest(WebClient client, String clientId,
+			TokenRequestState state, Many<TokenRequestState> sink) {
 		return client.post()
 			.uri(uriBuilder -> uriBuilder.path("login/oauth/access_token")
 				.queryParam("client_id", clientId)
@@ -264,9 +209,7 @@ public class GithubDeviceFlow {
 			.onErrorResume(e -> Mono.empty())
 			.doOnNext(trs -> {
 				sink.emitNext(trs, EmitFailureHandler.FAIL_FAST);
-			})
-			;
-
+			});
 	}
 
 

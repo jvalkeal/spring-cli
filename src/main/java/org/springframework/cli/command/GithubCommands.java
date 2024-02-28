@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jline.utils.AttributedString;
 import org.kohsuke.github.GitHub;
@@ -38,9 +39,14 @@ import org.springframework.cli.support.github.GithubDeviceFlow.TokenRequestState
 import org.springframework.cli.util.SpringCliTerminal;
 import org.springframework.shell.command.annotation.Command;
 import org.springframework.shell.command.annotation.Option;
+import org.springframework.shell.component.ViewComponent;
+import org.springframework.shell.component.ViewComponent.ViewComponentRun;
 import org.springframework.shell.component.flow.ComponentFlow;
 import org.springframework.shell.component.flow.ComponentFlow.ComponentFlowResult;
 import org.springframework.shell.component.flow.ResultMode;
+import org.springframework.shell.component.view.control.ProgressView;
+import org.springframework.shell.component.view.control.ProgressView.ProgressViewItem;
+import org.springframework.shell.geom.HorizontalAlign;
 import org.springframework.shell.style.StyleSettings;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -121,16 +127,41 @@ public class GithubCommands extends AbstractSpringCliCommands {
 		String clientId = getCliProperties().getGithub().getClientId();
 		String scopes = getCliProperties().getGithub().getDefaultScopes();
 
+		ProgressView view = new ProgressView(ProgressViewItem.ofSpinner(0, HorizontalAlign.LEFT));
+		view.setRect(0, 0, 20, 1);
+		ViewComponent component = getViewComponentBuilder().build(view);
+		view.start();
+		ViewComponentRun run = component.runAsync();
 		GithubDeviceFlow githubDeviceFlow = new GithubDeviceFlow("https://github.com");
+		AtomicBoolean showOpenBrowser = new AtomicBoolean(true);
+		AtomicBoolean showGotToken = new AtomicBoolean(true);
 
 		Flux<TokenRequestState> requestDeviceFlowx = githubDeviceFlow.requestDeviceFlowx(webClientBuilder, clientId, scopes);
 		TokenRequestState blockLast = requestDeviceFlowx
 			.doOnNext(tk -> {
-				log.info("UUU {}", tk);
+				if (showOpenBrowser.compareAndSet(true, false)) {
+					AttributedString styledStr = terminal.styledString("!", StyleSettings.TAG_LEVEL_WARN);
+					styledStr = terminal.join(styledStr, terminal.styledString(" Open your browser with " + tk.verificationUri() + " and paste the device code ", null));
+					styledStr = terminal.join(styledStr, terminal.styledString(tk.userCode(), StyleSettings.TAG_HIGHLIGHT));
+					String rawMsg = styledStr.toAnsi();
+					int width = getTerminal().getWidth();
+					String msg = String.format("%-" + width + "s", rawMsg);
+					getTerminal().writer().write(msg + System.lineSeparator());
+					getTerminal().writer().flush();
+				}
+				if (tk.token() != null) {
+					if (showGotToken.compareAndSet(true, false)) {
+						int width = getTerminal().getWidth();
+						String msg = String.format("%-" + width + "s", "logged in to GitHub");
+						getTerminal().writer().write(msg + System.lineSeparator());
+						getTerminal().writer().flush();
+					}
+				}
 			})
-			.blockLast()
-			;
+			.blockLast();
 		log.info("UUU blocklast {}", blockLast);
+		view.stop();
+		run.cancel();
 	}
 
 
