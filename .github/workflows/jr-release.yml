@@ -42,14 +42,29 @@ jobs:
           name: jlink
           path: out/jreleaser/assemble/spring-cli-standalone/jlink
 
+      - uses: actions/create-github-app-token@v1
+        id: app-token-repo
+        with:
+          app-id: ${{ vars.SPRING_PROJECTS_SPRING_CLI_BOT_APP_ID }}
+          private-key: ${{ secrets.SPRING_PROJECTS_SPRING_CLI_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.SPRING_PROJECTS_SPRING_CLI_REPO_TOKEN_OWNER }}
+          repositories: ${{ vars.SPRING_PROJECTS_SPRING_CLI_REPO_TOKEN_REPOSITORIES }}
+      - uses: actions/create-github-app-token@v1
+        id: app-token-org
+        with:
+          app-id: ${{ vars.SPRING_PROJECTS_SPRING_CLI_BOT_APP_ID }}
+          private-key: ${{ secrets.SPRING_PROJECTS_SPRING_CLI_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.SPRING_PROJECTS_SPRING_CLI_ORG_TOKEN_OWNER }}
+          repositories: ${{ vars.SPRING_PROJECTS_SPRING_CLI_ORG_TOKEN_REPOSITORIES }}
+
       - name: Release
         uses: jreleaser/release-action@v2
         with:
           version: early-access
           arguments: full-release
         env:
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_REPO_JR_TOKEN }}
-          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ secrets.SPRING_CLI_ORG_JR_TOKEN }}
+          JRELEASER_GITHUB_TOKEN: ${{ steps.app-token-repo.outputs.token }}
+          JRELEASER_HOMEBREW_GITHUB_TOKEN: ${{ steps.app-token-org.outputs.token }}
           JRELEASER_PROJECT_VERSION: ${{ inputs.version }}
 
       - name: JReleaser release output
