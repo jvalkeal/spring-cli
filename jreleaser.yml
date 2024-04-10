@@ -40,6 +40,7 @@ assemble:
   javaArchive:
     spring-cli:
       active: ALWAYS
+      templateDirectory: src/jreleaser/templates/java-archine
       mainJar:
         path: build/libs/{{distributionName}}-{{projectVersion}}.jar
       executable:
