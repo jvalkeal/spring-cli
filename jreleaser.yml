@@ -125,7 +125,7 @@ distributions:
       multiPlatform: true
       templateDirectory: src/jreleaser/templates/jlink/brew
       repository:
-        owner: jvalkeal
+        owner: jvalkeal-org
         name: homebrew-spring-cli
     artifacts:
       - path: '{{jlinkDir}}/{{distributionName}}-{{projectVersion}}-linux-x86_64.zip'
