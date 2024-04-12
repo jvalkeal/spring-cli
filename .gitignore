@@ -18,6 +18,8 @@ build/
 bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
+!src/jreleaser/templates/java-archive/bin/
+!src/jreleaser/templates/jlink/jlink/bin/
 
 ### IntelliJ IDEA ###
 .idea

@@ -40,8 +40,13 @@ assemble:
   javaArchive:
     spring-cli:
       active: ALWAYS
+      templateDirectory: src/jreleaser/templates/java-archive
       mainJar:
         path: build/libs/{{distributionName}}-{{projectVersion}}.jar
+      # java:
+      #   options:
+      #     - -Xmx1G
+      #     - -Xms1G
       executable:
         name: spring
       artifacts:
@@ -55,6 +60,11 @@ assemble:
       active: ALWAYS
       imageName: '{{distributionName}}-{{projectVersion}}'
       executable: spring
+      templateDirectory: src/jreleaser/templates/jlink/jlink
+      # java:
+      #   options:
+      #     - -Xmx1G
+      #     - -Xms1G
       jdeps:
         multiRelease: base
         ignoreMissingDeps: true
