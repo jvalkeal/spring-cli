@@ -36,8 +36,13 @@ jobs:
     with:
       ref: ${{ needs.precheck.outputs.ref }}
       version: ${{ needs.precheck.outputs.version }}
-  release:
+  sign:
     needs: [precheck,javaarchive,jpackage]
+    uses: ./.github/workflows/jr-sign.yml
+    with:
+      xxx: '["ubuntu-latest"]'
+  release:
+    needs: [precheck,javaarchive,jpackage,sign]
     uses: ./.github/workflows/jr-release.yml
     secrets: inherit
     with:

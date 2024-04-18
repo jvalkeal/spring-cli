@@ -1,0 +1,37 @@
+name: JR Sign
+
+on:
+  workflow_call:
+    inputs:
+      xxx:
+        required: true
+        type: string
+
+jobs:
+  assemble:
+    name: '${{ matrix.job.os }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        xxx: ${{ fromJSON(github.event.inputs.xxx) }}
+    runs-on: ${{ matrix.xxx }}
+    steps:
+      - name: Download jpackage
+        uses: actions/download-artifact@v3
+        with:
+          name: jpackage
+          path: out/jreleaser/assemble/spring-cli-installer/jpackage
+      - name: Test
+        run: |
+          find out
+      # - name: Upload jpackage
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     retention-days: 1
+      #     name: jpackage
+      #     path: |
+      #       out/jreleaser/assemble/spring-cli-installer/jpackage/*.pkg
+      #       out/jreleaser/assemble/spring-cli-installer/jpackage/*.msi
+      #       out/jreleaser/assemble/spring-cli-installer/jpackage/*.exe
+      #       out/jreleaser/assemble/spring-cli-installer/jpackage/*.deb
+      #       out/jreleaser/assemble/spring-cli-installer/jpackage/*.rpm
