@@ -40,7 +40,7 @@ jobs:
     needs: [precheck,javaarchive,jpackage]
     uses: ./.github/workflows/jr-sign.yml
     with:
-      xxx: ["ubuntu-latest"]
+      xxx: '["ubuntu-latest"]'
   release:
     needs: [precheck,javaarchive,jpackage,sign]
     uses: ./.github/workflows/jr-release.yml

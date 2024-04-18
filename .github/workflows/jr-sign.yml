@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xxx: ${{ fromJSON(github.event.inputs.xxx) }}
+        xxx: ${{ fromJSON(inputs.xxx) }}
     runs-on: ${{ matrix.xxx }}
     steps:
       - name: Download jpackage
