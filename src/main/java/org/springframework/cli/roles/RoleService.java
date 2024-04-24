@@ -92,11 +92,12 @@ public class RoleService {
 					"The file for the role '" + roleName + "' was not found.  Error = " + ex.getMessage());
 		}
 		// try {
-		// 	yaml.dump(map, new PrintWriter(getRoleFile));
+		// yaml.dump(map, new PrintWriter(getRoleFile));
 		// }
 		// catch (FileNotFoundException ex) {
-		// 	throw new SpringCliException(
-		// 			"The file for the role '" + roleName + "' was not found.  Error = " + ex.getMessage());
+		// throw new SpringCliException(
+		// "The file for the role '" + roleName + "' was not found. Error = " +
+		// ex.getMessage());
 		// }
 
 	}

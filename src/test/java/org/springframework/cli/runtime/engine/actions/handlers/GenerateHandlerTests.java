@@ -52,8 +52,9 @@ public class GenerateHandlerTests {
 			String tempDir = System.getProperty("java.io.tmpdir");
 			String expectedContents = "Hello World with Java 8 Root package " + "com" + File.separatorChar + "example"
 					+ File.separatorChar + "restservice Temp dir " + tempDir;
-			// String expectedContents = "Hello World with Java 8 Root package com/example/restservice Temp dir "
-			// 		+ tempDir;
+			// String expectedContents = "Hello World with Java 8 Root package
+			// com/example/restservice Temp dir "
+			// + tempDir;
 			assertThat(helloPath.toFile()).hasContent(expectedContents);
 
 		});
