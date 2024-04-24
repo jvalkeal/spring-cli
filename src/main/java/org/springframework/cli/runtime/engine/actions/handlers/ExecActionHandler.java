@@ -103,7 +103,15 @@ public class ExecActionHandler {
 			}
 		}
 
-		String[] commands = { "bash", "-c", commandToUse };
+		String[] commands;
+		if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+			commands = new String[] { "cmd.exe", "/c", commandToUse };
+		}
+		else {
+			commands = new String[] { "bash", "-c", commandToUse };
+		}
+		// String[] commands = { "cmd.exe", "/c", commandToUse };
+		// String[] commands = { "bash", "-c", commandToUse };
 
 		ProcessBuilder processBuilder = new ProcessBuilder(commands);
 		try {

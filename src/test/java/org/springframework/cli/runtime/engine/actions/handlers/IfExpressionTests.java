@@ -49,6 +49,7 @@ class IfExpressionTests {
 		RoleService roleService = new RoleService(workingDir);
 		Map<String, Object> map = roleService.loadAsMap("");
 		assertThat(map).containsEntry("name", "John is present in the output");
+		assertThat(map).isNotNull();
 	}
 
 	@Test

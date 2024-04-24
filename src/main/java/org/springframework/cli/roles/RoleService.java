@@ -84,13 +84,20 @@ public class RoleService {
 		dumperOptions.setLineBreak(DumperOptions.LineBreak.getPlatformLineBreak());
 		Yaml yaml = new Yaml(dumperOptions);
 		File getRoleFile = getFile(roleName);
-		try {
-			yaml.dump(map, new PrintWriter(getRoleFile));
+		try (PrintWriter writer = new PrintWriter(getRoleFile)) {
+			yaml.dump(map, writer);
 		}
 		catch (FileNotFoundException ex) {
 			throw new SpringCliException(
 					"The file for the role '" + roleName + "' was not found.  Error = " + ex.getMessage());
 		}
+		// try {
+		// 	yaml.dump(map, new PrintWriter(getRoleFile));
+		// }
+		// catch (FileNotFoundException ex) {
+		// 	throw new SpringCliException(
+		// 			"The file for the role '" + roleName + "' was not found.  Error = " + ex.getMessage());
+		// }
 
 	}
 

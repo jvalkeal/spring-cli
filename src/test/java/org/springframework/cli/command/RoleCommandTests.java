@@ -61,6 +61,7 @@ public class RoleCommandTests {
 			assertThat(expected).isEqualTo("bar");
 
 		});
+		int i = 9;
 	}
 
 	private static void assertRoleContents(RoleCommands roleCommands, String role, Path varsFilePath) {
