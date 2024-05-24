@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the original author or authors.
+ * Copyright 2021-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,12 @@ import java.nio.file.Path;
 import org.apache.maven.model.DependencyManagement;
 import org.apache.maven.model.Model;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.cli.CliTags;
 import org.springframework.cli.support.MockConfigurations.MockBaseConfig;
 import org.springframework.cli.support.MockConfigurations.MockFakeUserConfig;
 import org.springframework.cli.support.MockConfigurations.MockUserConfig;
@@ -38,6 +40,7 @@ public class BootCommandsTests {
 		.withUserConfiguration(MockBaseConfig.class);
 
 	@Test
+	// @Tag(CliTags.GITHUB)
 	void canCreateFromDefaults(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -53,6 +56,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateAndChangeNameAndPackageBasedOnGroupId(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -67,6 +71,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateAndChangeNameAndPackageBasedOnPackageName(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -81,6 +86,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateUsingGithubUri(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -96,6 +102,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateFromRegisteredProject(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockFakeUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -110,6 +117,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateFromRegisteredCatalog(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockFakeUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -124,6 +132,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateAndAddProjects(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockFakeUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -145,6 +154,7 @@ public class BootCommandsTests {
 	}
 
 	@Test
+	@Tag(CliTags.GITHUB)
 	void canCreateAndAddProjectThatModifiesManagedDepsAndMergesProperties(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockFakeUserConfig.class).run((context) -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
@@ -185,6 +195,7 @@ public class BootCommandsTests {
 
 	@Test
 	@DisplayName("Can create a new Boot project and add JPA to it")
+	@Tag(CliTags.GITHUB)
 	void canCreateANewBootProjectAndAddJpaToIt(final @TempDir Path workingDir) {
 		this.contextRunner.withUserConfiguration(MockUserConfig.class).run(context -> {
 			assertThat(context).hasSingleBean(BootCommands.class);
