@@ -31,7 +31,6 @@ jobs:
           cache: gradle
       - run: ./gradlew build --no-daemon
       - uses: actions/upload-artifact@v3
-        if: ${{ failure() }}
         with:
           name: buildreports-${{ matrix.nickname }}
           path: build/reports
