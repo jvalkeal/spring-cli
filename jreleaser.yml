@@ -106,6 +106,7 @@ assemble:
       osx:
         types: [pkg]
         appName: SpringCli
+        appVersion: 1.0.0
         packageName: SpringCli
         packageIdentifier: org.springframework.cli
         resourceDir: 'src/jreleaser/jpackage/osx'
